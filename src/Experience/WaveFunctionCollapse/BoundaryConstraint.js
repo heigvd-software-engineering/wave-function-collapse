@@ -11,8 +11,19 @@ export class BoundaryConstraint {
   };
 
   constructor() {
+    /**
+     * @type {number}
+     */
     this.relativeY = 0;
+
+    /**
+     * @type {ConstraintDirection}
+     */
     this.direction = BoundaryConstraint.ConstraintDirection.Up;
+
+    /**
+     * @type {ConstraintMode}
+     */
     this.mode = BoundaryConstraint.ConstraintMode.EnforceConnector;
     this.connector = 0;
   }
