@@ -2,18 +2,6 @@ import * as THREE from "three";
 import { Orientations } from "./Orientations.js";
 
 export class Module {
-  /*
-
-  	public Module(GameObject prefab, int rotation, int index) {
-		this.Rotation = rotation;
-		this.Index = index;
-		this.Prefab = prefab;
-		this.Prototype = this.Prefab.GetComponent<ModulePrototype>();
-		this.Name = this.Prototype.gameObject.name + " R" + rotation;
-		this.PLogP = this.Prototype.Probability * Mathf.Log(this.Prototype.Probability);
-	}
-   */
-
   constructor(prefab, prefabModulePrototype, rotation, index) {
     /**
      * @type {number}
