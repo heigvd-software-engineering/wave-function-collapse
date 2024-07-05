@@ -100,14 +100,16 @@ export default class World {
               cellSize.y * 0.9,
               cellSize.z * 0.9,
             );
+
             const material = new THREE.MeshBasicMaterial({
               color: color,
             });
+
             material.transparent = true;
             material.opacity = 0.1;
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
-            // console.log("cube", cube.position);
+
             this.scene.add(cube);
           } else {
             const prototype = prototypes.find(

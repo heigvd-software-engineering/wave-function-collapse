@@ -41,6 +41,7 @@ const DIRECTIONS = {
   POS_Y: new THREE.Vector3(0, 1, 0),
   NEG_Y: new THREE.Vector3(0, -1, 0),
   POS_Z: new THREE.Vector3(0, 0, 1),
+  NEG_Z: new THREE.Vector3(0, 0, -1),
 };
 
 // Map Data
@@ -49,8 +50,43 @@ const DIRECTIONS = {
  * @type {string[][][][]}
  */
 let map = [];
+
+/**
+ * Size of the map in cells unit
+ * @type {Vector3} mapSize
+ */
 let mapSize = new THREE.Vector3(0);
+
+/**
+ * Size of a cell
+ * @type {Vector3} cellSize
+ */
 let cellSize = new THREE.Vector3(0);
+
+/**
+ * Get the real size of the map in the 3D world from its cell coordinates
+ * @returns {THREE.Vector3} mapSize
+ */
+const getMapSize = () => {
+  return new THREE.Vector3(
+    mapSize.x * cellSize.x,
+    mapSize.y * cellSize.y,
+    mapSize.z * cellSize.z,
+  );
+};
+
+/**
+ * Get the real coordinates of a cell in the 3D world from a cell coordinates
+ * @param {THREE.Vector3} coords cell coordinates
+ * @returns {Vector3} realCoords
+ */
+const getRealCoords = (coords) => {
+  return new THREE.Vector3(
+    coords.x * cellSize.x,
+    coords.y * cellSize.y,
+    coords.z * cellSize.z,
+  );
+};
 
 /**
  * @type {Stack<THREE.Vector3>}

@@ -8,6 +8,7 @@ const DIRECTIONS = {
   posY: new THREE.Vector3(0, 1, 0),
   negY: new THREE.Vector3(0, -1, 0),
   posZ: new THREE.Vector3(0, 0, 1),
+  NEG_Z: new THREE.Vector3(0, 0, -1),
 };
 
 // Number of (π/2) rotations
