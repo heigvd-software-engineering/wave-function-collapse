@@ -37,20 +37,27 @@ export default class Tile {
     }
   }
 
+  offsetVector = new Vector3(0, Tile.TILE_HEIGHT / 2, 0);
+
+  // Get the position of the model in the world with the offset
+  getModelPosition() {
+    return this.model.position.clone().add(this.offsetVector);
+  }
+
   setModel(position) {
     this.model = this.resource.scene.clone();
     this.scene.add(this.model);
 
-    this.model.position.set(position.x, position.y, position.z);
+    this.model.position
+      .set(position.x, position.y, position.z)
+      .sub(this.offsetVector);
     this.model.rotation.y = -this.prototype.rotation * (Math.PI / 2); // negative for clockwise rotation
 
     // Debug
     if (this.debug.active) {
       // Debug box
       const box = new THREE.Box3();
-      const boxPosition = this.model.position
-        .clone()
-        .add(new Vector3(0, Tile.TILE_HEIGHT / 2, 0));
+      const boxPosition = this.getModelPosition();
       box.setFromCenterAndSize(
         boxPosition,
         new THREE.Vector3(Tile.TILE_WIDTH, Tile.TILE_HEIGHT, Tile.TILE_WIDTH),

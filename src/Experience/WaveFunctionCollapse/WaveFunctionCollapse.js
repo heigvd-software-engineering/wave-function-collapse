@@ -12,15 +12,19 @@ const deepCopy = (object) => {
 
 /**
  * Seedable random function
+ * (https://decode.sh/seeded-random-number-generator-in-js/)
  */
-function seededRandom(seed) {
-  var m = 2 ** 35 - 31;
-  var a = 185852;
-  var s = seed % m;
+const seededRandom = (seed) => {
+  let m = 2 ** 35 - 31;
+  let a = 185852;
+  let s = seed % m;
   return function () {
     return (s = (s * a) % m) / m;
   };
-}
+};
+
+const SEED = 473974392;
+const random = seededRandom(SEED);
 
 /**
  * Returns a random number between min and max (inclusive)
@@ -28,8 +32,7 @@ function seededRandom(seed) {
  * @param {number} max (inclusive)
  */
 const randomBetween = (min, max) => {
-  const SEED = 10;
-  return Math.floor(seededRandom(SEED) * (max - min + 1) + min);
+  return Math.floor(random() * (max - min + 1) + min);
 };
 
 const DIRECTIONS = {
@@ -41,6 +44,10 @@ const DIRECTIONS = {
 };
 
 // Map Data
+/**
+ * 3D map containing lists of possible prototypes for each cell, represented by their prototype id
+ * @type {string[][][][]}
+ */
 let map = [];
 let mapSize = new THREE.Vector3(0);
 let cellSize = new THREE.Vector3(0);
@@ -116,9 +123,11 @@ const getMinEntropyCoords = () => {
     }
   }
 
+  const rnd = randomBetween(0, minEntropyCoords.length - 1);
+
   // If there are multiple cells with the same entropy, return a random one
   // TODO : use weights to choose one
-  return minEntropyCoords[randomBetween(0, minEntropyCoords.length - 1)];
+  return minEntropyCoords[rnd];
 };
 
 /**
@@ -182,7 +191,7 @@ const getNeighboursDirection = (coords) => {
 /**
  * Return the list of possible prototypes for a cell
  * @param {THREE.Vector3} coords
- * @returns {Prototype[]} possiblePrototypes
+ * @returns {string[]} possiblePrototypes
  */
 const getPossiblePrototypes = (coords) => {
   return map[coords.x][coords.y][coords.z];
@@ -202,13 +211,6 @@ const collapse = (coords) => {
   // TODO : use weights to choose the prototype
   const theChosenOne =
     possiblePrototypes[randomBetween(0, possiblePrototypes.length - 1)];
-
-  if (!theChosenOne) {
-    console.error("collapse error");
-    console.error("No prototype found at coords", coords);
-    console.error("Cell", map[coords.x][coords.y][coords.z]);
-    printMap();
-  }
 
   map[coords.x][coords.y][coords.z] = [theChosenOne];
 };
@@ -239,16 +241,6 @@ const getPrototypeFromId = (id) => {
 const getPossiblePrototypesInDirection = (coords, direction) => {
   const currentPrototype = getPossiblePrototypes(coords)[0];
 
-  console.log(
-    `getPossiblePrototypesInDirection ${coords} ${direction}: Prototype ${currentPrototype}`,
-  );
-
-  if (!currentPrototype) {
-    console.error("getPossiblePrototypesInDirection error");
-    console.error("No prototype found at coords", coords);
-    console.error("Cell", map[coords.x][coords.y][coords.z]);
-    printMap();
-  }
   return getPrototypeFromId(currentPrototype).getPossiblePrototypesInDirection(
     direction,
   );
@@ -274,10 +266,6 @@ const propagate = (coords) => {
 
       const neigbhourPossiblePrototypes =
         getPossiblePrototypes(neighbourCoords);
-      console.log(
-        `neigbhourPossiblePrototypes ${direction}`,
-        neigbhourPossiblePrototypes,
-      );
 
       if (neigbhourPossiblePrototypes.length === 0) continue;
 
@@ -286,25 +274,11 @@ const propagate = (coords) => {
         currentCoords,
         direction,
       );
-      console.log(
-        `currentPossiblePrototypes ${direction}`,
-        currentPossiblePrototypes,
-      );
 
       // Compare the two lists
       for (const neighbourPossiblePrototype of neigbhourPossiblePrototypes) {
         if (!currentPossiblePrototypes.includes(neighbourPossiblePrototype)) {
-          console.log(
-            `neighbourPossiblePrototype ${neighbourPossiblePrototype} is not in currentPossiblePrototypes`,
-          );
-          console.log("constrain", neighbourCoords, neighbourPossiblePrototype);
-
           constrain(neighbourCoords, neighbourPossiblePrototype);
-          console.log(
-            "Constrained neighbour content :",
-            map[neighbourCoords.x][neighbourCoords.y][neighbourCoords.z],
-          );
-
           if (!stack.includes(neighbourCoords)) {
             stack.push(neighbourCoords);
           }
@@ -316,6 +290,7 @@ const propagate = (coords) => {
 
 const iterate = () => {
   const coords = getMinEntropyCoords();
+  console.log("iteration coords", coords);
   collapse(coords);
   propagate(coords);
 };
@@ -344,20 +319,18 @@ const printMap = () => {
 };
 
 const start = () => {
-  while (!isFullyCollapsed()) {
-    iterate();
+  console.log("Start WFC");
+  let iteration = 0;
+  try {
+    while (!isFullyCollapsed()) {
+      console.log("Iteration", iteration++);
+      iterate();
+    }
+    console.log("WFC done");
+  } catch (error) {
+    console.error("WFC error", error);
   }
-  renderResult();
+  return map;
 };
 
-// Execution (debug)
-
-console.log("Init Wave Function Collapse");
-initialize({
-  newCellSize: new THREE.Vector3(2, 2, 2),
-  newMapSize: new THREE.Vector3(4, 4, 4),
-  prototypes: Prototype.prototypes,
-});
-
-console.log("Start Wave Function Collapse");
-start();
+export { initialize, start };

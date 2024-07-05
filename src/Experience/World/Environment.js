@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import Experience from "../Experience.js";
+import { Vector3 } from "three";
 
 export default class Environment {
   constructor() {
