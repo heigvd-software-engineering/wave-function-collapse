@@ -11,6 +11,9 @@ export default class World {
     this.scene = this.experience.scene;
     this.resources = this.experience.resources;
 
+    this.finalMap = null;
+    this.tilesMap = null;
+
     // Wait for resources
     this.resources.on("ready", () => {
       // Setup
@@ -83,6 +86,18 @@ export default class World {
    * @param {THREE.Vector3} cellSize
    */
   instantiateMap(map, prototypes, cellSize) {
+    this.finalMap = map;
+    this.tilesMap = [];
+    for (let x = 0; x < map.length; x++) {
+      this.tilesMap[x] = [];
+      for (let y = 0; y < map[x].length; y++) {
+        this.tilesMap[x][y] = [];
+        for (let z = 0; z < map[x][y].length; z++) {
+          this.tilesMap[x][y][z] = null;
+        }
+      }
+    }
+
     for (let x = 0; x < map.length; x++) {
       for (let y = 0; y < map[x].length; y++) {
         for (let z = 0; z < map[x][y].length; z++) {
@@ -110,6 +125,9 @@ export default class World {
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
 
+            cube.prototypeContent = map[x][y][z];
+            this.tilesMap[x][y][z] = cube;
+
             this.scene.add(cube);
           } else {
             const prototype = prototypes.find(
@@ -121,6 +139,9 @@ export default class World {
                 prototype,
                 new Vector3(x * cellSize.x, y * cellSize.y, z * cellSize.z),
               );
+              const tileModel = tile.model.clone();
+              tileModel.tile = tile;
+              this.tilesMap[x][y][z] = tileModel;
             } else {
               console.error("Prototype not found, cell :", map[x][y][z][0]);
             }
@@ -128,6 +149,11 @@ export default class World {
         }
       }
     }
+  }
+
+  onPointerMove(event) {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
 
   update() {}

@@ -36,12 +36,12 @@ const randomBetween = (min, max) => {
 };
 
 const DIRECTIONS = {
-  POS_X: new THREE.Vector3(1, 0, 0),
-  NEG_X: new THREE.Vector3(-1, 0, 0),
-  POS_Y: new THREE.Vector3(0, 1, 0),
-  NEG_Y: new THREE.Vector3(0, -1, 0),
-  POS_Z: new THREE.Vector3(0, 0, 1),
-  NEG_Z: new THREE.Vector3(0, 0, -1),
+  posX: new THREE.Vector3(1, 0, 0),
+  negX: new THREE.Vector3(-1, 0, 0),
+  posY: new THREE.Vector3(0, 1, 0),
+  negY: new THREE.Vector3(0, -1, 0),
+  posZ: new THREE.Vector3(0, 0, 1),
+  negZ: new THREE.Vector3(0, 0, -1),
 };
 
 // Map Data
@@ -53,13 +53,13 @@ let map = [];
 
 /**
  * Size of the map in cells unit
- * @type {Vector3} mapSize
+ * @type {THREE.Vector3} mapSize
  */
 let mapSize = new THREE.Vector3(0);
 
 /**
  * Size of a cell
- * @type {Vector3} cellSize
+ * @type {THREE.Vector3} cellSize
  */
 let cellSize = new THREE.Vector3(0);
 
@@ -78,7 +78,7 @@ const getMapSize = () => {
 /**
  * Get the real coordinates of a cell in the 3D world from a cell coordinates
  * @param {THREE.Vector3} coords cell coordinates
- * @returns {Vector3} realCoords
+ * @returns {THREE.Vector3} realCoords
  */
 const getRealCoords = (coords) => {
   return new THREE.Vector3(
@@ -119,9 +119,10 @@ const isFullyCollapsed = () => {
 };
 
 /**
- * @param cellSize {THREE.Vector3}
- * @param mapSize {THREE.Vector3}
- * @param prototypes {Array<Prototype>}
+ * Initialize the WFC algorithm
+ * @param newCellSize
+ * @param newMapSize
+ * @param prototypes
  */
 const initialize = ({ newCellSize, newMapSize, prototypes }) => {
   mapSize = newMapSize;
@@ -190,10 +191,6 @@ const isCoordsValid = (coords) => {
  * @returns {THREE.Vector3[]}
  */
 const getNeighboursCoords = (coords) => {
-  const x = coords.x;
-  const y = coords.y;
-  const z = coords.z;
-
   const neighboursCoords = [];
 
   for (const direction of Object.values(DIRECTIONS)) {
@@ -209,7 +206,7 @@ const getNeighboursCoords = (coords) => {
 /**
  * Returns an array of directions (i.e. THREE.Vector3(1, 0, 0) for the right neighbour)
  * @param {THREE.Vector3} coords
- * @returns {Vector3[]}
+ * @returns {THREE.Vector3[]}
  */
 const getNeighboursDirection = (coords) => {
   const possibleDirections = [];
@@ -254,32 +251,57 @@ const collapse = (coords) => {
 /**
  * Remove the prototype from the list of possible prototypes
  * @param {THREE.Vector3} coords
- * @param {Prototype} prototype
+ * @param {string} prototype
  */
 const constrain = (coords, prototype) => {
   map[coords.x][coords.y][coords.z] = map[coords.x][coords.y][coords.z].filter(
-    (p) => p.id !== prototype.id,
+    (p) => p !== prototype,
   );
 };
 
-// Get prorotype from id
+/**
+ * Get the prototype from its id
+ * @param {string} id
+ * @returns {Prototype | undefined} prototype
+ */
 const getPrototypeFromId = (id) => {
   return prototypes.find((p) => p.id === id);
 };
 
 /**
- * Returns the list of possible prototypes for the current cell in the direction "direction"
+ * TODO doc
  *
  * @param {THREE.Vector3} coords
  * @param {THREE.Vector3} direction
  * @returns {Prototype[]}
  */
 const getPossiblePrototypesInDirection = (coords, direction) => {
-  const currentPrototype = getPossiblePrototypes(coords)[0];
+  const possiblePrototypes = getPossiblePrototypes(coords);
 
-  return getPrototypeFromId(currentPrototype).getPossiblePrototypesInDirection(
-    direction,
-  );
+  const possiblePrototypesInDirectionOutput = [];
+
+  for (const possiblePrototype of possiblePrototypes) {
+    const prototype = getPrototypeFromId(possiblePrototype);
+
+    if (!prototype) {
+      console.error("Prototype not found", possiblePrototype);
+      throw new Error("Prototype not found");
+    }
+
+    const possiblePrototypesInDirection =
+      prototype.getPossiblePrototypesInDirection(direction);
+
+    /**
+     * Add the possible prototypes in the direction to the output once
+     */
+    possiblePrototypesInDirection.forEach((p) => {
+      if (!possiblePrototypesInDirectionOutput.includes(p)) {
+        possiblePrototypesInDirectionOutput.push(p);
+      }
+    });
+  }
+
+  return possiblePrototypesInDirectionOutput;
 };
 
 /**
@@ -291,14 +313,11 @@ const propagate = (coords) => {
 
   while (!stack.isEmpty()) {
     const currentCoords = stack.pop();
-    console.log("currentCoords", currentCoords);
 
     const directions = getNeighboursDirection(currentCoords);
-    console.log("directions", directions);
 
     for (const direction of directions) {
       const neighbourCoords = currentCoords.clone().add(direction);
-      console.log(`neighbourCoords ${direction}`, neighbourCoords);
 
       const neigbhourPossiblePrototypes =
         getPossiblePrototypes(neighbourCoords);
@@ -309,7 +328,7 @@ const propagate = (coords) => {
       const currentPossiblePrototypes = getPossiblePrototypesInDirection(
         currentCoords,
         direction,
-      );
+      ).map((p) => p.id);
 
       // Compare the two lists
       for (const neighbourPossiblePrototype of neigbhourPossiblePrototypes) {
@@ -361,6 +380,8 @@ const start = () => {
     while (!isFullyCollapsed()) {
       console.log("Iteration", iteration++);
       iterate();
+      // TODO : remove, avoid infinite loop for testing
+      if (iteration === 1000) break;
     }
     console.log("WFC done");
   } catch (error) {
