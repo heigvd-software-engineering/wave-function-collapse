@@ -62,6 +62,10 @@ export default class Environment {
     this.environmentMap = {};
     this.environmentMap.intensity = 0.4;
     this.environmentMap.texture = this.resources.items.environmentMapTexture;
+    // this.environmentMap.texture =
+    //   this.resources.items.environmentMapTextureCabin;
+    // this.environmentMap.texture.mapping =
+    //   THREE.EquirectangularReflectionMapping;
     this.environmentMap.texture.colorSpace = THREE.SRGBColorSpace;
 
     this.scene.environment = this.environmentMap.texture;
@@ -79,6 +83,8 @@ export default class Environment {
       });
     };
     this.environmentMap.updateMaterials();
+    // this.scene.background = this.environmentMap.texture;
+    this.scene.background = new THREE.Color(0xe3e3e3);
 
     // Debug
     if (this.debug.active) {
