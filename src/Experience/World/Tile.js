@@ -11,18 +11,19 @@ export default class Tile {
   static TILE_WIDTH = 4;
   static TILE_HEIGHT = 4;
 
-  constructor(prototype, position = new Vector3()) {
+  constructor(prototype, position = new Vector3(), tileDebugFolder) {
     this.experience = new Experience();
     this.scene = this.experience.scene;
     this.resources = this.experience.resources;
     this.time = this.experience.time;
     this.debug = this.experience.debug;
+    this.tileDebugFolder = tileDebugFolder;
     this.prototype = prototype;
     this.helper = null;
 
     // Debug
     if (this.debug.active) {
-      this.debugFolder = this.debug.ui.addFolder(this.prototype.id);
+      this.debugFolder = this.tileDebugFolder.addFolder(this.prototype.id);
     }
 
     // Resource
@@ -85,6 +86,13 @@ export default class Tile {
         });
       }
     });
+  }
+
+  clear() {
+    this.scene.remove(this.model);
+    if (this.helper) {
+      this.scene.remove(this.helper);
+    }
   }
 
   updateHelper() {

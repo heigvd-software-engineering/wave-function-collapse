@@ -34,49 +34,52 @@ let map = [];
  */
 let mapSize = new THREE.Vector3(0);
 
-/**
- * Size of a cell
- * @type {THREE.Vector3} cellSize
- */
-let cellSize = new THREE.Vector3(0);
-
-/**
- * Get the real size of the map in the 3D world from its cell coordinates
- * @returns {THREE.Vector3} mapSize
- */
-const getMapSize = () => {
-  return new THREE.Vector3(
-    mapSize.x * cellSize.x,
-    mapSize.y * cellSize.y,
-    mapSize.z * cellSize.z,
-  );
-};
-
-/**
- * Get the real coordinates of a cell in the 3D world from a cell coordinates
- * @param {THREE.Vector3} coords cell coordinates
- * @returns {THREE.Vector3} realCoords
- */
-const getRealCoords = (coords) => {
-  return new THREE.Vector3(
-    coords.x * cellSize.x,
-    coords.y * cellSize.y,
-    coords.z * cellSize.z,
-  );
-};
+// /**
+//  * Size of a cell
+//  * @type {THREE.Vector3} cellSize
+//  */
+// let cellSize = new THREE.Vector3(0);
+//
+// /**
+//  * Get the real size of the map in the 3D world from its cell coordinates
+//  * @returns {THREE.Vector3} mapSize
+//  */
+// const getMapSize = () => {
+//   return new THREE.Vector3(
+//     mapSize.x * cellSize.x,
+//     mapSize.y * cellSize.y,
+//     mapSize.z * cellSize.z,
+//   );
+// };
+//
+// /**
+//  * Get the real coordinates of a cell in the 3D world from a cell coordinates
+//  * @param {THREE.Vector3} coords cell coordinates
+//  * @returns {THREE.Vector3} realCoords
+//  */
+// const getRealCoords = (coords) => {
+//   return new THREE.Vector3(
+//     coords.x * cellSize.x,
+//     coords.y * cellSize.y,
+//     coords.z * cellSize.z,
+//   );
+// };
 
 /**
  * @type {Stack<THREE.Vector3>}
  */
 const stack = new Stack();
 
+let nbCollapsed = 0;
+
 /**
- * Checks if any cell has more than one possible prototype then return false
+ * Checks if any cell has more than one possible prototype then the total number of collapsed cells
  *
  * @returns {boolean} isFullyCollapsed
  */
 const isFullyCollapsed = () => {
-  // TODO : this function can be used for showing progress
+  let newNbCollapsed = 0;
+  let allCollapsed = true;
 
   for (let x = 0; x < mapSize.x; x++) {
     for (let y = 0; y < mapSize.y; y++) {
@@ -85,15 +88,23 @@ const isFullyCollapsed = () => {
         if (!cell.collapsed) {
           // One cell has more than one possible prototype
           // so the map is not fully collapsed
-          return false;
+          allCollapsed = false;
+        } else {
+          newNbCollapsed++;
         }
       }
     }
   }
 
+  nbCollapsed = newNbCollapsed;
+
   // All cells have only one possible prototype
   // so the map is fully collapsed
-  return true;
+  return allCollapsed;
+};
+
+const progressPercentage = () => {
+  return (nbCollapsed / (mapSize.x * mapSize.y * mapSize.z)) * 100;
 };
 
 /**
@@ -102,9 +113,8 @@ const isFullyCollapsed = () => {
  * @param newMapSize
  * @param prototypes
  */
-const initialize = ({ newCellSize, newMapSize, prototypes }) => {
+const initialize = ({ newMapSize }) => {
   mapSize = newMapSize;
-  cellSize = newCellSize;
 
   // init 3d map, 3d matrice of mapSize
   for (let x = 0; x < mapSize.x; x++) {
@@ -133,8 +143,10 @@ const getMinEntropy = () => {
         const cell = getCell(new THREE.Vector3(x, y, z));
         const cellEntropy = cell.getEntropy();
 
-        if (!cell.collapsed && cellEntropy <= minEntropy) {
+        if (!cell.collapsed && cellEntropy < minEntropy) {
           minEntropy = cellEntropy;
+          minEntropyCells = [cell];
+        } else if (!cell.collapsed && cellEntropy === minEntropy) {
           minEntropyCells.push(cell);
         }
       }
@@ -352,9 +364,11 @@ const propagate = (coords) => {
   }
 };
 
+let iteration = 0;
+
 const iterate = () => {
   const coords = getMinEntropyCoords();
-  console.log("iteration coords", coords);
+  console.log(`iteration ${iteration} coords`, coords);
   collapse(coords);
   propagate(coords);
 };
@@ -384,10 +398,9 @@ const printMap = () => {
 
 const start = () => {
   console.log("Start WFC");
-  let iteration = 0;
   try {
     while (!isFullyCollapsed()) {
-      console.log("Iteration", iteration++);
+      console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
       iterate();
     }
     console.log("WFC done");
@@ -397,4 +410,25 @@ const start = () => {
   return map;
 };
 
-export { initialize, start };
+const manualIterate = () => {
+  try {
+    if (!isFullyCollapsed()) {
+      console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
+      iterate();
+    } else {
+      console.log("WFC done");
+    }
+  } catch (error) {
+    console.error("WFC error", error);
+  }
+  return map;
+};
+
+const reset = () => {
+  initialize({
+    newMapSize: mapSize,
+  });
+  iteration = 0;
+};
+
+export { initialize, start, manualIterate, reset };

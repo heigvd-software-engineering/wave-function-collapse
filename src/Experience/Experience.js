@@ -9,11 +9,13 @@ import World from "./World/World.js";
 import Resources from "./Utils/Resources.js";
 
 import sources from "./sources.js";
+import * as WFC from "./WaveFunctionCollapse/WaveFunctionCollapse.js";
+import * as Prototype from "./Prototype.js";
 
 let instance = null;
 
 export default class Experience {
-  constructor(_canvas) {
+  constructor(_canvas, cellSize = 4, mapSize = 10) {
     // Singleton
     if (instance) {
       return instance;
@@ -47,12 +49,61 @@ export default class Experience {
     });
   }
 
+  start() {
+    this.resources.on("ready", () => {
+      const cellSize = new THREE.Vector3(4, 4, 4);
+      const mapSize = new THREE.Vector3(5, 1, 5);
+
+      this.world.setMapHelper(mapSize, cellSize);
+
+      WFC.initialize({
+        newMapSize: mapSize,
+      });
+
+      // const finalMap = WFC.start();
+
+      let WfcDebugObject = {
+        manualIteration: () => {
+          const finalMap = WFC.manualIterate();
+
+          this.world.clear();
+          this.world.instantiateMap(finalMap, Prototype.prototypes, cellSize);
+
+          if (this.debug.active) this.addClickEvent();
+        },
+        resumeOrStartIterations: () => {
+          const finalMap = WFC.start();
+
+          this.world.clear();
+          this.world.instantiateMap(finalMap, Prototype.prototypes, cellSize);
+
+          if (this.debug.active) this.addClickEvent();
+        },
+        clearWFC: () => {
+          WFC.reset();
+          this.world.clear();
+        },
+      };
+
+      this.debug.ui
+        .add(WfcDebugObject, "manualIteration")
+        .name("Manual Iteration");
+
+      this.debug.ui
+        .add(WfcDebugObject, "resumeOrStartIterations")
+        .name("Resume or Start Iterations");
+
+      this.debug.ui.add(WfcDebugObject, "clearWFC").name("Clear");
+    });
+  }
+
   resize() {
     this.camera.resize();
     this.renderer.resize();
   }
 
   // TODO : Clean this part
+  // TODO Click Debug not working currently
   addClickEvent() {
     if (this.world.finalMap === null) {
       return;
@@ -65,20 +116,17 @@ export default class Experience {
     this.currentIntersect = null;
     this.currentIntersectClicked = false;
 
-    // Click on a tile
+    // Click on a tile TODO Click Debug not working currently
     window.addEventListener("click", (event) => {
       if (this.intersects?.length > 0) {
         console.info("# Showing tile contents :");
         this.intersects
           .sort((a, b) => a.distance - b.distance)
           .forEach((intersect) => {
-            if (intersect.object.prototypeContent) {
-              console.info(
-                "## Uncollapsed tile : ",
-                intersect.object.prototypeContent,
-              );
+            if (intersect.object.cell) {
+              console.info("## Uncollapsed tile : ", intersect.object.cell);
             } else {
-              console.info("## Collapsed tile : ", intersect.object.tile);
+              console.info("## Collapsed tile : ", intersect.object.cell);
             }
           });
       }
@@ -96,27 +144,33 @@ export default class Experience {
     this.camera.update();
     this.world.update();
 
-    // Raycaster TODO Clean this part
-    if (this.mouse) {
-      if (this.intersects) {
+    // TODO Click Debug not working currently
+    if (this.debug.active && this.world.tilesMap) {
+      // Raycaster TODO Clean this part
+      if (this.mouse) {
+        if (this.intersects) {
+          this.intersects.forEach((intersect) => {
+            intersect.object.material.opacity = 0.1;
+          });
+        }
+
+        const rayCaster = new THREE.Raycaster();
+        rayCaster.setFromCamera(this.mouse, this.camera.instance);
+
+        const objectsToTest = this.world.tilesMap
+          .filter((t) => t !== null)
+          .flat(2)
+          .map((tile) => {
+            const model = tile.model;
+            model.cell = tile.cell;
+            return model;
+          });
+
+        this.intersects = rayCaster.intersectObjects(objectsToTest);
         this.intersects.forEach((intersect) => {
-          if (intersect.object.prototypeContent) {
-            intersect.object.material.color.set("#ff0000");
-          }
+          intersect.object.material.opacity = 0.25;
         });
       }
-
-      const rayCaster = new THREE.Raycaster();
-      rayCaster.setFromCamera(this.mouse, this.camera.instance);
-
-      const objectsToTest = this.world.tilesMap.flat(2);
-
-      this.intersects = rayCaster.intersectObjects(objectsToTest);
-      this.intersects.forEach((intersect) => {
-        if (intersect.object.prototypeContent) {
-          intersect.object.material.color.set("#00ff00");
-        }
-      });
     }
 
     this.renderer.update();

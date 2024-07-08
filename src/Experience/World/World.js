@@ -10,9 +10,15 @@ export default class World {
     this.experience = new Experience();
     this.scene = this.experience.scene;
     this.resources = this.experience.resources;
+    this.debug = this.experience.debug;
 
     this.finalMap = null;
     this.tilesMap = null;
+
+    if (this.debug.active) {
+      this.tileDebugFolder = this.debug.ui.addFolder("TILES");
+      this.tileDebugFolder.close();
+    }
 
     // Wait for resources
     this.resources.on("ready", () => {
@@ -50,6 +56,7 @@ export default class World {
     });
   }
 
+  // TODO : create Map class
   /**
    *
    * @param {THREE.Vector3} mapSize
@@ -71,7 +78,6 @@ export default class World {
             new THREE.Vector3(cellSize.x, cellSize.y, cellSize.z),
           );
           const helper = new THREE.Box3Helper(box, 0xff0000);
-          // console.log("helper", helper.position);
 
           this.scene.add(helper);
         }
@@ -102,7 +108,8 @@ export default class World {
       for (let y = 0; y < map[x].length; y++) {
         for (let z = 0; z < map[x][y].length; z++) {
           const cell = map[x][y][z];
-          if (!cell.collapsed) {
+
+          if (this.debug.active && !cell.collapsed) {
             // Select error color
             let color;
             if (cell.possiblePrototypeIds.length === 0) {
@@ -126,29 +133,52 @@ export default class World {
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
 
-            cube.cell = cell;
-            this.tilesMap[x][y][z] = cube;
+            this.tilesMap[x][y][z] = { model: cube, cell: cell };
 
             this.scene.add(cube);
-          } else {
-            const prototype = Prototype.getPrototypeById(cell.prototypeId);
+            continue;
+          }
 
-            if (prototype) {
-              const tile = new Tile(
-                prototype,
-                new Vector3(x * cellSize.x, y * cellSize.y, z * cellSize.z),
-              );
-              const tileModel = tile.model.clone();
-              tileModel.tile = tile;
-              tileModel.cell = cell;
-              this.tilesMap[x][y][z] = tileModel;
-            } else {
-              console.error("Prototype not found, cell :", cell);
-            }
+          const prototype = Prototype.getPrototypeById(cell.prototypeId);
+
+          if (prototype) {
+            const tile = new Tile(
+              prototype,
+              new Vector3(x * cellSize.x, y * cellSize.y, z * cellSize.z),
+              this.tileDebugFolder,
+            );
+            tile.cell = cell;
+            this.tilesMap[x][y][z] = tile;
+          } else {
+            console.error("Prototype not found, cell :", cell);
           }
         }
       }
     }
+  }
+
+  /**
+   * Clear the world
+   * TODO : not clean (difference between Tiles and "Debug cube")
+   */
+  clear() {
+    if (!this.finalMap) return;
+
+    this.tilesMap.forEach((x) => {
+      x.forEach((y) => {
+        y.forEach((z) => {
+          if (z) {
+            if (z.clear) {
+              z.clear();
+            }
+            this.scene.remove(z.model);
+          }
+        });
+      });
+    });
+
+    this.finalMap = null;
+    this.tilesMap = null;
   }
 
   onPointerMove(event) {

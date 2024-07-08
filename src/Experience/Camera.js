@@ -41,6 +41,7 @@ export default class Camera {
       this.viewPosX = true;
 
       this.debugFolder = this.debug.ui.addFolder("Camera");
+      this.debugFolder.close();
       this.debugFolder
         .add(this, "viewPosX")
         .listen()
