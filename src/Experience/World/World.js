@@ -81,7 +81,7 @@ export default class World {
 
   /**
    *
-   * @param {string[][][][]} map
+   * @param {Cell[][][]} map
    * @param {Prototype[]} prototypes
    * @param {THREE.Vector3} cellSize
    */
@@ -101,13 +101,14 @@ export default class World {
     for (let x = 0; x < map.length; x++) {
       for (let y = 0; y < map[x].length; y++) {
         for (let z = 0; z < map[x][y].length; z++) {
-          // console.log("x y z", x, y, z);
-          if (map[x][y][z].length === 0 || map[x][y][z].length > 1) {
+          const cell = map[x][y][z];
+          if (!cell.collapsed) {
+            // Select error color
             let color;
-            if (map[x][y][z].length === 0) {
-              color = 0xff0000;
+            if (cell.possiblePrototypeIds.length === 0) {
+              color = 0xff0000; // RED = Not collapsed but no possible prototype
             } else {
-              color = 0x0000ff;
+              color = 0x0000ff; // BLUE = Not collapsed
             }
 
             const geometry = new THREE.BoxGeometry(
@@ -125,14 +126,12 @@ export default class World {
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
 
-            cube.prototypeContent = map[x][y][z];
+            cube.cell = cell;
             this.tilesMap[x][y][z] = cube;
 
             this.scene.add(cube);
           } else {
-            const prototype = prototypes.find(
-              (prototype) => prototype.id === map[x][y][z][0],
-            );
+            const prototype = Prototype.getPrototypeById(cell.prototypeId);
 
             if (prototype) {
               const tile = new Tile(
@@ -141,9 +140,10 @@ export default class World {
               );
               const tileModel = tile.model.clone();
               tileModel.tile = tile;
+              tileModel.cell = cell;
               this.tilesMap[x][y][z] = tileModel;
             } else {
-              console.error("Prototype not found, cell :", map[x][y][z][0]);
+              console.error("Prototype not found, cell :", cell);
             }
           }
         }

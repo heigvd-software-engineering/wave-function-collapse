@@ -631,4 +631,8 @@ generateNeightbourList();
 // }
 // });
 
-export { prototypes, TILE_TYPE, TILE_ROTATION, SOCKET_TYPE };
+const getPrototypeById = (id) => {
+  return prototypes.find((prototype) => prototype.id === id);
+};
+
+export { prototypes, TILE_TYPE, TILE_ROTATION, SOCKET_TYPE, getPrototypeById };

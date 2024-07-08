@@ -2,37 +2,14 @@ import * as THREE from "three";
 import * as Prototype from "../Prototype.js";
 import Stack from "../Utils/Language/Stack.js";
 import { prototypes } from "../Prototype.js";
+import Cell from "./Cell.js";
+import { randomBetween } from "../Utils/SeededRandom.js";
 
 /**
  * Utils
  */
 const deepCopy = (object) => {
   return JSON.parse(JSON.stringify(object));
-};
-
-/**
- * Seedable random function
- * (https://decode.sh/seeded-random-number-generator-in-js/)
- */
-const seededRandom = (seed) => {
-  let m = 2 ** 35 - 31;
-  let a = 185852;
-  let s = seed % m;
-  return function () {
-    return (s = (s * a) % m) / m;
-  };
-};
-
-const SEED = 473974392;
-const random = seededRandom(SEED);
-
-/**
- * Returns a random number between min and max (inclusive)
- * @param {number} min (inclusive)
- * @param {number} max (inclusive)
- */
-const randomBetween = (min, max) => {
-  return Math.floor(random() * (max - min + 1) + min);
 };
 
 const DIRECTIONS = {
@@ -46,8 +23,8 @@ const DIRECTIONS = {
 
 // Map Data
 /**
- * 3D map containing lists of possible prototypes for each cell, represented by their prototype id
- * @type {string[][][][]}
+ * 3D map of cells
+ * @type {Cell[][][]}
  */
 let map = [];
 
@@ -104,7 +81,8 @@ const isFullyCollapsed = () => {
   for (let x = 0; x < mapSize.x; x++) {
     for (let y = 0; y < mapSize.y; y++) {
       for (let z = 0; z < mapSize.z; z++) {
-        if (map[x][y][z].length > 1) {
+        const cell = map[x][y][z];
+        if (!cell.collapsed) {
           // One cell has more than one possible prototype
           // so the map is not fully collapsed
           return false;
@@ -134,7 +112,7 @@ const initialize = ({ newCellSize, newMapSize, prototypes }) => {
     for (let y = 0; y < mapSize.y; y++) {
       map[x][y] = [];
       for (let z = 0; z < mapSize.z; z++) {
-        map[x][y][z] = prototypes.map((p) => p.id);
+        map[x][y][z] = new Cell(new THREE.Vector3(x, y, z));
       }
     }
   }
@@ -143,28 +121,35 @@ const initialize = ({ newCellSize, newMapSize, prototypes }) => {
 /**
  * Get the cell with the minimum entropy (= the cell that contains the least number of possible prototypes)
  * If there are multiple cells with the same entropy, return a random one or use weights to choose one
- * @returns {null}
+ * @returns {Cell}
  */
-const getMinEntropyCoords = () => {
+const getMinEntropy = () => {
   let minEntropy = Infinity;
-  let minEntropyCoords = [];
+  let minEntropyCells = [];
 
   for (let x = 0; x < mapSize.x; x++) {
     for (let y = 0; y < mapSize.y; y++) {
       for (let z = 0; z < mapSize.z; z++) {
-        if (map[x][y][z].length <= minEntropy) {
-          minEntropy = map[x][y][z].length;
-          minEntropyCoords.push(new THREE.Vector3(x, y, z));
+        const cell = getCell(new THREE.Vector3(x, y, z));
+        const cellEntropy = cell.getEntropy();
+
+        if (!cell.collapsed && cellEntropy <= minEntropy) {
+          minEntropy = cellEntropy;
+          minEntropyCells.push(cell);
         }
       }
     }
   }
 
-  const rnd = randomBetween(0, minEntropyCoords.length - 1);
+  const rnd = randomBetween(0, minEntropyCells.length - 1);
 
   // If there are multiple cells with the same entropy, return a random one
   // TODO : use weights to choose one
-  return minEntropyCoords[rnd];
+  return minEntropyCells[rnd];
+};
+
+const getMinEntropyCoords = () => {
+  return getMinEntropy().coordinates;
 };
 
 /**
@@ -222,30 +207,35 @@ const getNeighboursDirection = (coords) => {
 };
 
 /**
- * Return the list of possible prototypes for a cell
+ * Return the list of possible prototypes for a cell, returns an empty array if the cell is collapsed
  * @param {THREE.Vector3} coords
  * @returns {string[]} possiblePrototypes
  */
 const getPossiblePrototypes = (coords) => {
+  return getCell(coords).possiblePrototypeIds;
+};
+
+/**
+ * Get Cell from coords
+ * @param {THREE.Vector3} coords
+ * @returns {Cell}
+ */
+const getCell = (coords) => {
+  if (!isCoordsValid(coords)) {
+    console.error("Invalid coords", coords);
+    throw new Error("Invalid coords");
+  }
+
   return map[coords.x][coords.y][coords.z];
 };
 
 /**
  * Collapse the cell at coords
  *
- * (Choose a random prototype then remove the other
- * ones from the list of possible prototypes)
- *
  * @param coords
  */
 const collapse = (coords) => {
-  const possiblePrototypes = getPossiblePrototypes(coords);
-
-  // TODO : use weights to choose the prototype
-  const theChosenOne =
-    possiblePrototypes[randomBetween(0, possiblePrototypes.length - 1)];
-
-  map[coords.x][coords.y][coords.z] = [theChosenOne];
+  getCell(coords).collapse();
 };
 
 /**
@@ -254,9 +244,7 @@ const collapse = (coords) => {
  * @param {string} prototype
  */
 const constrain = (coords, prototype) => {
-  map[coords.x][coords.y][coords.z] = map[coords.x][coords.y][coords.z].filter(
-    (p) => p !== prototype,
-  );
+  getCell(coords).constrain(prototype);
 };
 
 /**
@@ -269,30 +257,51 @@ const getPrototypeFromId = (id) => {
 };
 
 /**
+ * Get collaped prototype id from coords
+ * @param {THREE.Vector3} coords
+ * @returns {String | undefined} prototype
+ */
+const getCollapsedPrototypeId = (coords) => {
+  const collapsed = map[coords.x][coords.y][coords.z];
+
+  if (collapsed.length !== 1) return undefined; // Not collapsed
+
+  return collapsed;
+};
+
+/**
  * TODO doc
  *
  * @param {THREE.Vector3} coords
  * @param {THREE.Vector3} direction
- * @returns {Prototype[]}
+ * @returns {String[]} prototype ids
  */
 const getPossiblePrototypesInDirection = (coords, direction) => {
-  const possiblePrototypes = getPossiblePrototypes(coords);
+  const cell = getCell(coords);
+  const possiblePrototypes = [];
+
+  if (cell.collapsed) {
+    possiblePrototypes.push(cell.prototypeId);
+  } else {
+    possiblePrototypes.push(...cell.possiblePrototypeIds);
+  }
 
   const possiblePrototypesInDirectionOutput = [];
 
   for (const possiblePrototype of possiblePrototypes) {
-    const prototype = getPrototypeFromId(possiblePrototype);
+    const prototype = Prototype.getPrototypeById(possiblePrototype);
 
     if (!prototype) {
       console.error("Prototype not found", possiblePrototype);
       throw new Error("Prototype not found");
     }
 
-    const possiblePrototypesInDirection =
-      prototype.getPossiblePrototypesInDirection(direction);
+    const possiblePrototypesInDirection = prototype
+      .getPossiblePrototypesInDirection(direction)
+      .map((p) => p.id);
 
     /**
-     * Add the possible prototypes in the direction to the output once
+     * Add the possible prototypes in the direction to the output only once
      */
     possiblePrototypesInDirection.forEach((p) => {
       if (!possiblePrototypesInDirectionOutput.includes(p)) {
@@ -319,19 +328,19 @@ const propagate = (coords) => {
     for (const direction of directions) {
       const neighbourCoords = currentCoords.clone().add(direction);
 
-      const neigbhourPossiblePrototypes =
+      const neighbourPossiblePrototypes =
         getPossiblePrototypes(neighbourCoords);
 
-      if (neigbhourPossiblePrototypes.length === 0) continue;
+      if (neighbourPossiblePrototypes.length === 0) continue;
 
       // Must be called each time, because the possible prototypes can change
       const currentPossiblePrototypes = getPossiblePrototypesInDirection(
         currentCoords,
         direction,
-      ).map((p) => p.id);
+      );
 
       // Compare the two lists
-      for (const neighbourPossiblePrototype of neigbhourPossiblePrototypes) {
+      for (const neighbourPossiblePrototype of neighbourPossiblePrototypes) {
         if (!currentPossiblePrototypes.includes(neighbourPossiblePrototype)) {
           constrain(neighbourCoords, neighbourPossiblePrototype);
           if (!stack.includes(neighbourCoords)) {
@@ -380,8 +389,6 @@ const start = () => {
     while (!isFullyCollapsed()) {
       console.log("Iteration", iteration++);
       iterate();
-      // TODO : remove, avoid infinite loop for testing
-      if (iteration === 1000) break;
     }
     console.log("WFC done");
   } catch (error) {
