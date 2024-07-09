@@ -490,7 +490,7 @@ const prototypes = [
   new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R0, {
     posX: SOCKET_TYPE.H_1_S,
     negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_2_1,
+    posY: SOCKET_TYPE.V_2_2,
     negY: SOCKET_TYPE.V_2_2_B,
     posZ: SOCKET_TYPE.H_1_S,
     negZ: SOCKET_TYPE.H_0_S,
@@ -498,7 +498,7 @@ const prototypes = [
   new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R1, {
     posX: SOCKET_TYPE.H_0_S,
     negX: SOCKET_TYPE.H_1_S,
-    posY: SOCKET_TYPE.V_2_2,
+    posY: SOCKET_TYPE.V_2_1,
     negY: SOCKET_TYPE.V_2_1_B,
     posZ: SOCKET_TYPE.H_1_S,
     negZ: SOCKET_TYPE.H_0_S,
@@ -506,7 +506,7 @@ const prototypes = [
   new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R2, {
     posX: SOCKET_TYPE.H_0_S,
     negX: SOCKET_TYPE.H_1_S,
-    posY: SOCKET_TYPE.V_2_3,
+    posY: SOCKET_TYPE.V_2_0,
     negY: SOCKET_TYPE.V_2_0_B,
     posZ: SOCKET_TYPE.H_0_S,
     negZ: SOCKET_TYPE.H_1_S,
@@ -514,7 +514,7 @@ const prototypes = [
   new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R3, {
     posX: SOCKET_TYPE.H_1_S,
     negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_2_0,
+    posY: SOCKET_TYPE.V_2_3,
     negY: SOCKET_TYPE.V_2_3_B,
     posZ: SOCKET_TYPE.H_0_S,
     negZ: SOCKET_TYPE.H_1_S,

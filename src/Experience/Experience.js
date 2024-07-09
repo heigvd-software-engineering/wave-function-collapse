@@ -52,7 +52,7 @@ export default class Experience {
   start() {
     this.resources.on("ready", () => {
       const cellSize = new THREE.Vector3(4, 4, 4);
-      const mapSize = new THREE.Vector3(5, 1, 5);
+      const mapSize = new THREE.Vector3(3, 2, 3);
 
       this.world.setMapHelper(mapSize, cellSize);
 
@@ -125,8 +125,6 @@ export default class Experience {
           .forEach((intersect) => {
             if (intersect.object.cell) {
               console.info("## Uncollapsed tile : ", intersect.object.cell);
-            } else {
-              console.info("## Collapsed tile : ", intersect.object.cell);
             }
           });
       }
@@ -157,19 +155,28 @@ export default class Experience {
         const rayCaster = new THREE.Raycaster();
         rayCaster.setFromCamera(this.mouse, this.camera.instance);
 
+        // TODO : error here
         const objectsToTest = this.world.tilesMap
           .filter((t) => t !== null)
+          // .filter((t) => !t.cell?.prototypeId?.includes("blank")) // remove the blanks from the raycaster
           .flat(2)
           .map((tile) => {
             const model = tile.model;
             model.cell = tile.cell;
+            if (tile.tile) {
+              model.tileInfo = tile.tile;
+            }
             return model;
           });
-
-        this.intersects = rayCaster.intersectObjects(objectsToTest);
-        this.intersects.forEach((intersect) => {
-          intersect.object.material.opacity = 0.25;
-        });
+        try {
+          // this.intersects = rayCaster.intersectObjects(objectsToTest);
+        } catch (error) {
+          console.log("object to test", objectsToTest);
+          console.error("Error while intersecting objects", error);
+        }
+        // this.intersects.forEach((intersect) => {
+        //   intersect.object.material.opacity = 0.25;
+        // });
       }
     }
 
