@@ -82,8 +82,8 @@ export default class Camera {
 
           gsap.to(this.instance.position, {
             x: 0.05,
-            y: 4.05,
-            z: 8,
+            y: 8,
+            z: 0,
             duration: duration,
           });
         });
@@ -97,8 +97,8 @@ export default class Camera {
 
           gsap.to(this.instance.position, {
             x: 0.05,
-            y: 4.05,
-            z: -8,
+            y: -8,
+            z: 0,
             duration: duration,
           });
         });
@@ -112,8 +112,8 @@ export default class Camera {
 
           gsap.to(this.instance.position, {
             x: 0.05,
-            y: 8,
-            z: 0,
+            y: 4.05,
+            z: 8,
             duration: duration,
           });
         });
@@ -127,8 +127,8 @@ export default class Camera {
 
           gsap.to(this.instance.position, {
             x: 0.05,
-            y: -8,
-            z: 0,
+            y: 4.05,
+            z: -8,
             duration: duration,
           });
         });
