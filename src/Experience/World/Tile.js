@@ -32,6 +32,7 @@ export default class Tile {
       this.model = {};
       this.model.position = new Vector3(position.x, position.y, position.z);
       this.model.rotation = new Vector3();
+      this.model.isObject3D = false;
     } else {
       this.resource = this.resources.items[this.prototype.type];
       this.setModel(position);
@@ -47,7 +48,6 @@ export default class Tile {
 
   setModel(position) {
     this.model = this.resource.scene.clone();
-    this.scene.add(this.model);
 
     this.model.position
       .set(position.x, position.y, position.z)

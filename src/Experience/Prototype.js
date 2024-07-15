@@ -290,9 +290,9 @@ class Prototype {
 
   /**
    * @param {THREE.Vector3} direction // TODO maybe change to a type ?
-   * @returns {Prototype[]} possiblePrototypes
+   * @returns {String[]} possiblePrototypesIds
    */
-  getPossiblePrototypesInDirection(direction) {
+  getPossiblePrototypeIdsInDirection(direction) {
     // TODO : pas très esthétique
 
     if (direction.equals(DIRECTIONS.posX)) {
@@ -314,7 +314,8 @@ class Prototype {
   }
 }
 
-const generateNeightbourList = () => {
+// TODO : not clean
+const generateNeightbourIdList = () => {
   const grouped_prototypes = Object.groupBy(
     prototypes,
     (prototype) => prototype.type,
@@ -368,6 +369,13 @@ const generateNeightbourList = () => {
           }
         }
       });
+    }
+
+    // Get only the ids
+    for (let validNeighboursKey in valid_neighbours) {
+      valid_neighbours[validNeighboursKey] = valid_neighbours[
+        validNeighboursKey
+      ].map((neighbour) => neighbour.id);
     }
 
     prototype.valid_neighbours = valid_neighbours;
@@ -439,185 +447,295 @@ const getVerticalSocketOrientation = (socket) => {
 
 // TODO : verifier les bottoms, la direction semble incorrecte
 const prototypes = [
-  new Prototype(TILE_TYPE.BLANK, TILE_ROTATION.R_None, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_0_S,
-    negY: SOCKET_TYPE.V_0_S_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.C1, TILE_ROTATION.R_None, {
-    posX: SOCKET_TYPE.H_5_S,
-    negX: SOCKET_TYPE.H_5_S,
-    posY: SOCKET_TYPE.V_0_G_S,
-    negY: SOCKET_TYPE.V_0_S_B,
-    posZ: SOCKET_TYPE.H_5_S,
-    negZ: SOCKET_TYPE.H_5_S,
-  }),
-  new Prototype(TILE_TYPE.W1, TILE_ROTATION.R0, {
-    posX: SOCKET_TYPE.H_1_S,
-    negX: SOCKET_TYPE.H_1_S,
-    posY: SOCKET_TYPE.V_1_1,
-    negY: SOCKET_TYPE.V_1_F_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.W1, TILE_ROTATION.R1, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_1_1,
-    negY: SOCKET_TYPE.V_1_F_B,
-    posZ: SOCKET_TYPE.H_1_S,
-    negZ: SOCKET_TYPE.H_1_S,
-  }),
-  new Prototype(TILE_TYPE.W1, TILE_ROTATION.R2, {
-    posX: SOCKET_TYPE.H_1_S,
-    negX: SOCKET_TYPE.H_1_S,
-    posY: SOCKET_TYPE.V_1_1,
-    negY: SOCKET_TYPE.V_1_F_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.W1, TILE_ROTATION.R3, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_1_1,
-    negY: SOCKET_TYPE.V_1_F_B,
-    posZ: SOCKET_TYPE.H_1_S,
-    negZ: SOCKET_TYPE.H_1_S,
-  }),
-  new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R0, {
-    posX: SOCKET_TYPE.H_1_S,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_2_2,
-    negY: SOCKET_TYPE.V_2_2_B,
-    posZ: SOCKET_TYPE.H_1_S,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R1, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_1_S,
-    posY: SOCKET_TYPE.V_2_1,
-    negY: SOCKET_TYPE.V_2_1_B,
-    posZ: SOCKET_TYPE.H_1_S,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R2, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_1_S,
-    posY: SOCKET_TYPE.V_2_0,
-    negY: SOCKET_TYPE.V_2_0_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_1_S,
-  }),
-  new Prototype(TILE_TYPE.WA1, TILE_ROTATION.R3, {
-    posX: SOCKET_TYPE.H_1_S,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_2_3,
-    negY: SOCKET_TYPE.V_2_3_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_1_S,
-  }),
-  new Prototype(TILE_TYPE.WART1, TILE_ROTATION.R0, {
-    posX: SOCKET_TYPE.H_4_F,
-    negX: SOCKET_TYPE.H_5_S,
-    posY: SOCKET_TYPE.V_2_RG_1,
-    negY: SOCKET_TYPE.V_2_2_B,
-    posZ: SOCKET_TYPE.H_4,
-    negZ: SOCKET_TYPE.H_5_S,
-  }),
-  new Prototype(TILE_TYPE.WART1, TILE_ROTATION.R1, {
-    posX: SOCKET_TYPE.H_5_S,
-    negX: SOCKET_TYPE.H_4,
-    posY: SOCKET_TYPE.V_2_RG_2,
-    negY: SOCKET_TYPE.V_2_1_B,
-    posZ: SOCKET_TYPE.H_4_F,
-    negZ: SOCKET_TYPE.H_5_S,
-  }),
-  new Prototype(TILE_TYPE.WART1, TILE_ROTATION.R2, {
-    posX: SOCKET_TYPE.H_5_S,
-    negX: SOCKET_TYPE.H_4_F,
-    posY: SOCKET_TYPE.V_2_RG_3,
-    negY: SOCKET_TYPE.V_2_0_B,
-    posZ: SOCKET_TYPE.H_5_S,
-    negZ: SOCKET_TYPE.H_4,
-  }),
-  new Prototype(TILE_TYPE.WART1, TILE_ROTATION.R3, {
-    posX: SOCKET_TYPE.H_4,
-    negX: SOCKET_TYPE.H_5_S,
-    posY: SOCKET_TYPE.V_2_RG_0,
-    negY: SOCKET_TYPE.V_2_3_B,
-    posZ: SOCKET_TYPE.H_5_S,
-    negZ: SOCKET_TYPE.H_4_F,
-  }),
-  new Prototype(TILE_TYPE.WAT1, TILE_ROTATION.R0, {
-    posX: SOCKET_TYPE.H_4,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_2_G_1,
-    negY: SOCKET_TYPE.V_2_2_B,
-    posZ: SOCKET_TYPE.H_4_F,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.WAT1, TILE_ROTATION.R1, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_4_F,
-    posY: SOCKET_TYPE.V_2_G_2,
-    negY: SOCKET_TYPE.V_2_1_B,
-    posZ: SOCKET_TYPE.H_4,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.WAT1, TILE_ROTATION.R2, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_4,
-    posY: SOCKET_TYPE.V_2_G_3,
-    negY: SOCKET_TYPE.V_2_0_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_4_F,
-  }),
-  new Prototype(TILE_TYPE.WAT1, TILE_ROTATION.R3, {
-    posX: SOCKET_TYPE.H_4_F,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_2_G_0,
-    negY: SOCKET_TYPE.V_2_3_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_4,
-  }),
-  new Prototype(TILE_TYPE.WT1, TILE_ROTATION.R0, {
-    posX: SOCKET_TYPE.H_4,
-    negX: SOCKET_TYPE.H_4_F,
-    posY: SOCKET_TYPE.V_1_G_1,
-    negY: SOCKET_TYPE.V_1_B,
-    posZ: SOCKET_TYPE.H_5_S,
-    negZ: SOCKET_TYPE.H_0_S,
-  }),
-  new Prototype(TILE_TYPE.WT1, TILE_ROTATION.R1, {
-    posX: SOCKET_TYPE.H_0_S,
-    negX: SOCKET_TYPE.H_5_S,
-    posY: SOCKET_TYPE.V_1_G_2,
-    negY: SOCKET_TYPE.V_1_F_B,
-    posZ: SOCKET_TYPE.H_4,
-    negZ: SOCKET_TYPE.H_4_F,
-  }),
-  new Prototype(TILE_TYPE.WT1, TILE_ROTATION.R2, {
-    posX: SOCKET_TYPE.H_4_F,
-    negX: SOCKET_TYPE.H_4,
-    posY: SOCKET_TYPE.V_1_G_3,
-    negY: SOCKET_TYPE.V_1_B,
-    posZ: SOCKET_TYPE.H_0_S,
-    negZ: SOCKET_TYPE.H_5_S,
-  }),
-  new Prototype(TILE_TYPE.WT1, TILE_ROTATION.R3, {
-    posX: SOCKET_TYPE.H_5_S,
-    negX: SOCKET_TYPE.H_0_S,
-    posY: SOCKET_TYPE.V_1_G_0,
-    negY: SOCKET_TYPE.V_1_F_B,
-    posZ: SOCKET_TYPE.H_4_F,
-    negZ: SOCKET_TYPE.H_4,
-  }),
+  new Prototype(
+    TILE_TYPE.BLANK,
+    TILE_ROTATION.R_None,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_0_S,
+      negY: SOCKET_TYPE.V_0_S_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    0,
+  ),
+  new Prototype(
+    TILE_TYPE.C1,
+    TILE_ROTATION.R_None,
+    {
+      posX: SOCKET_TYPE.H_5_S,
+      negX: SOCKET_TYPE.H_5_S,
+      posY: SOCKET_TYPE.V_0_G_S,
+      negY: SOCKET_TYPE.V_0_S_B,
+      posZ: SOCKET_TYPE.H_5_S,
+      negZ: SOCKET_TYPE.H_5_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.W1,
+    TILE_ROTATION.R0,
+    {
+      posX: SOCKET_TYPE.H_1_S,
+      negX: SOCKET_TYPE.H_1_S,
+      posY: SOCKET_TYPE.V_1_1,
+      negY: SOCKET_TYPE.V_1_F_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.W1,
+    TILE_ROTATION.R1,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_1_1,
+      negY: SOCKET_TYPE.V_1_F_B,
+      posZ: SOCKET_TYPE.H_1_S,
+      negZ: SOCKET_TYPE.H_1_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.W1,
+    TILE_ROTATION.R2,
+    {
+      posX: SOCKET_TYPE.H_1_S,
+      negX: SOCKET_TYPE.H_1_S,
+      posY: SOCKET_TYPE.V_1_1,
+      negY: SOCKET_TYPE.V_1_F_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.W1,
+    TILE_ROTATION.R3,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_1_1,
+      negY: SOCKET_TYPE.V_1_F_B,
+      posZ: SOCKET_TYPE.H_1_S,
+      negZ: SOCKET_TYPE.H_1_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WA1,
+    TILE_ROTATION.R0,
+    {
+      posX: SOCKET_TYPE.H_1_S,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_2_2,
+      negY: SOCKET_TYPE.V_2_2_B,
+      posZ: SOCKET_TYPE.H_1_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WA1,
+    TILE_ROTATION.R1,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_1_S,
+      posY: SOCKET_TYPE.V_2_1,
+      negY: SOCKET_TYPE.V_2_1_B,
+      posZ: SOCKET_TYPE.H_1_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WA1,
+    TILE_ROTATION.R2,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_1_S,
+      posY: SOCKET_TYPE.V_2_0,
+      negY: SOCKET_TYPE.V_2_0_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_1_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WA1,
+    TILE_ROTATION.R3,
+    {
+      posX: SOCKET_TYPE.H_1_S,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_2_3,
+      negY: SOCKET_TYPE.V_2_3_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_1_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WART1,
+    TILE_ROTATION.R0,
+    {
+      posX: SOCKET_TYPE.H_4_F,
+      negX: SOCKET_TYPE.H_5_S,
+      posY: SOCKET_TYPE.V_2_RG_1,
+      negY: SOCKET_TYPE.V_2_2_B,
+      posZ: SOCKET_TYPE.H_4,
+      negZ: SOCKET_TYPE.H_5_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WART1,
+    TILE_ROTATION.R1,
+    {
+      posX: SOCKET_TYPE.H_5_S,
+      negX: SOCKET_TYPE.H_4,
+      posY: SOCKET_TYPE.V_2_RG_2,
+      negY: SOCKET_TYPE.V_2_1_B,
+      posZ: SOCKET_TYPE.H_4_F,
+      negZ: SOCKET_TYPE.H_5_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WART1,
+    TILE_ROTATION.R2,
+    {
+      posX: SOCKET_TYPE.H_5_S,
+      negX: SOCKET_TYPE.H_4_F,
+      posY: SOCKET_TYPE.V_2_RG_3,
+      negY: SOCKET_TYPE.V_2_0_B,
+      posZ: SOCKET_TYPE.H_5_S,
+      negZ: SOCKET_TYPE.H_4,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WART1,
+    TILE_ROTATION.R3,
+    {
+      posX: SOCKET_TYPE.H_4,
+      negX: SOCKET_TYPE.H_5_S,
+      posY: SOCKET_TYPE.V_2_RG_0,
+      negY: SOCKET_TYPE.V_2_3_B,
+      posZ: SOCKET_TYPE.H_5_S,
+      negZ: SOCKET_TYPE.H_4_F,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WAT1,
+    TILE_ROTATION.R0,
+    {
+      posX: SOCKET_TYPE.H_4,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_2_G_1,
+      negY: SOCKET_TYPE.V_2_2_B,
+      posZ: SOCKET_TYPE.H_4_F,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WAT1,
+    TILE_ROTATION.R1,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_4_F,
+      posY: SOCKET_TYPE.V_2_G_2,
+      negY: SOCKET_TYPE.V_2_1_B,
+      posZ: SOCKET_TYPE.H_4,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WAT1,
+    TILE_ROTATION.R2,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_4,
+      posY: SOCKET_TYPE.V_2_G_3,
+      negY: SOCKET_TYPE.V_2_0_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_4_F,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WAT1,
+    TILE_ROTATION.R3,
+    {
+      posX: SOCKET_TYPE.H_4_F,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_2_G_0,
+      negY: SOCKET_TYPE.V_2_3_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_4,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WT1,
+    TILE_ROTATION.R0,
+    {
+      posX: SOCKET_TYPE.H_4,
+      negX: SOCKET_TYPE.H_4_F,
+      posY: SOCKET_TYPE.V_1_G_1,
+      negY: SOCKET_TYPE.V_1_B,
+      posZ: SOCKET_TYPE.H_5_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WT1,
+    TILE_ROTATION.R1,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_5_S,
+      posY: SOCKET_TYPE.V_1_G_2,
+      negY: SOCKET_TYPE.V_1_F_B,
+      posZ: SOCKET_TYPE.H_4,
+      negZ: SOCKET_TYPE.H_4_F,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WT1,
+    TILE_ROTATION.R2,
+    {
+      posX: SOCKET_TYPE.H_4_F,
+      negX: SOCKET_TYPE.H_4,
+      posY: SOCKET_TYPE.V_1_G_3,
+      negY: SOCKET_TYPE.V_1_B,
+      posZ: SOCKET_TYPE.H_0_S,
+      negZ: SOCKET_TYPE.H_5_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WT1,
+    TILE_ROTATION.R3,
+    {
+      posX: SOCKET_TYPE.H_5_S,
+      negX: SOCKET_TYPE.H_0_S,
+      posY: SOCKET_TYPE.V_1_G_0,
+      negY: SOCKET_TYPE.V_1_F_B,
+      posZ: SOCKET_TYPE.H_4_F,
+      negZ: SOCKET_TYPE.H_4,
+    },
+    1,
+  ),
 ];
 
-generateNeightbourList();
+generateNeightbourIdList();
 
 // prototypes.forEach((prototype) => {
 // console.log("\n\n");

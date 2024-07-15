@@ -246,8 +246,8 @@ const getCell = (coords) => {
  *
  * @param coords
  */
-const collapse = (coords) => {
-  getCell(coords).collapse();
+const collapse = (coords, isBlank = false) => {
+  getCell(coords).collapse(isBlank);
 };
 
 /**
@@ -308,14 +308,13 @@ const getPossiblePrototypesInDirection = (coords, direction) => {
       throw new Error("Prototype not found");
     }
 
-    const possiblePrototypesInDirection = prototype
-      .getPossiblePrototypesInDirection(direction)
-      .map((p) => p.id);
+    const possiblePrototypeIdsInDirection =
+      prototype.getPossiblePrototypeIdsInDirection(direction);
 
     /**
      * Add the possible prototypes in the direction to the output only once
      */
-    possiblePrototypesInDirection.forEach((p) => {
+    possiblePrototypeIdsInDirection.forEach((p) => {
       if (!possiblePrototypesInDirectionOutput.includes(p)) {
         possiblePrototypesInDirectionOutput.push(p);
       }
@@ -366,11 +365,49 @@ const propagate = (coords) => {
 
 let iteration = 0;
 
+const allSideBorderCollapsed = () => {
+  for (let x = 0; x < mapSize.x; x++) {
+    for (let y = 0; y < mapSize.y; y++) {
+      for (let z = 0; z < mapSize.z; z++) {
+        const coords = new THREE.Vector3(x, y, z);
+        if (isOnSideBorder(coords) && !getCell(coords).collapsed) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+};
+
+function isOnSideBorder(coords) {
+  return (
+    coords.x === 0 ||
+    coords.x === mapSize.x - 1 ||
+    coords.z === 0 ||
+    coords.z === mapSize.z - 1
+  );
+}
+
 const iterate = () => {
   const coords = getMinEntropyCoords();
   console.log(`iteration ${iteration} coords`, coords);
   collapse(coords);
   propagate(coords);
+};
+
+const sideBorderIteration = () => {
+  for (let x = 0; x < mapSize.x; x++) {
+    for (let y = 0; y < mapSize.y; y++) {
+      for (let z = 0; z < mapSize.z; z++) {
+        const coords = new THREE.Vector3(x, y, z);
+        if (isOnSideBorder(coords)) {
+          console.log(`border iteration ${iteration} coords`, coords);
+          collapse(coords, true);
+          propagate(coords);
+        }
+      }
+    }
+  }
 };
 
 const renderResult = () => {
@@ -399,6 +436,9 @@ const printMap = () => {
 const start = () => {
   console.log("Start WFC");
   try {
+    while (!allSideBorderCollapsed()) {
+      sideBorderIteration();
+    }
     while (!isFullyCollapsed()) {
       console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
       iterate();
@@ -412,6 +452,9 @@ const start = () => {
 
 const manualIterate = () => {
   try {
+    while (!allSideBorderCollapsed()) {
+      sideBorderIteration();
+    }
     if (!isFullyCollapsed()) {
       console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
       iterate();

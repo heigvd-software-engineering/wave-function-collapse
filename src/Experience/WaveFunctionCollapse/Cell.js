@@ -18,6 +18,11 @@ class Cell {
     this.possiblePrototypeIds = prototypes.map((prototype) => prototype.id);
 
     /**
+     * @type {Prototype[]} empty if collapsed // TODO : keep this ? or just use the ids
+     */
+    this.possiblePrototypes = prototypes;
+
+    /**
      * @type {Boolean}
      */
     this.collapsed = false;
@@ -34,15 +39,31 @@ class Cell {
    * (Choose a random prototype then remove the other
    * ones from the list of possible prototypes)
    */
-  collapse() {
+  collapse(isBlank = false) {
     // TODO : use weight to select the prototype
-    const theChosenOne =
-      this.possiblePrototypeIds[
-        randomBetween(0, this.possiblePrototypeIds.length - 1)
-      ];
+    let theChosenOne;
+    if (isBlank) {
+      theChosenOne = "blank-R-1"; // TODO : remove hard coded value
+    } else {
+      const prototypeByBiggestWeight = this.getBiggesteWeightPrototypes();
+      theChosenOne =
+        prototypeByBiggestWeight[
+          randomBetween(0, this.possiblePrototypeIds.length - 1)
+        ];
+    }
     this.possiblePrototypeIds = [];
+    this.possiblePrototypes = [];
     this.prototypeId = theChosenOne;
     this.collapsed = true;
+  }
+
+  getBiggesteWeightPrototypes() {
+    const maxWeight = Math.max(
+      ...this.possiblePrototypes.map((prototype) => prototype.weight),
+    );
+    return this.possiblePrototypes
+      .filter((prototype) => prototype.weight === maxWeight)
+      .map((prototype) => prototype.id);
   }
 
   /**
@@ -63,6 +84,9 @@ class Cell {
   constrain(prototypeId) {
     this.possiblePrototypeIds = this.possiblePrototypeIds.filter(
       (pId) => pId !== prototypeId,
+    );
+    this.possiblePrototypes = this.possiblePrototypes.filter(
+      (prototype) => prototype.id !== prototypeId,
     );
   }
 }

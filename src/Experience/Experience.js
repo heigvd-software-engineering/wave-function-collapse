@@ -11,6 +11,7 @@ import Resources from "./Utils/Resources.js";
 import sources from "./sources.js";
 import * as WFC from "./WaveFunctionCollapse/WaveFunctionCollapse.js";
 import * as Prototype from "./Prototype.js";
+import { mapRange } from "gsap/gsap-core";
 
 let instance = null;
 
@@ -52,7 +53,7 @@ export default class Experience {
   start() {
     this.resources.on("ready", () => {
       const cellSize = new THREE.Vector3(4, 4, 4);
-      const mapSize = new THREE.Vector3(3, 2, 3);
+      const mapSize = new THREE.Vector3(10, 3, 10);
 
       this.world.setMapHelper(mapSize, cellSize);
 
@@ -157,26 +158,22 @@ export default class Experience {
 
         // TODO : error here
         const objectsToTest = this.world.tilesMap
-          .filter((t) => t !== null)
-          // .filter((t) => !t.cell?.prototypeId?.includes("blank")) // remove the blanks from the raycaster
           .flat(2)
+          .filter((t) => t !== null)
+          .filter((t) => t.model.isObject3D) // remove the blanks from the raycaster;
           .map((tile) => {
-            const model = tile.model;
-            model.cell = tile.cell;
-            if (tile.tile) {
-              model.tileInfo = tile.tile;
-            }
-            return model;
+            // add the cell to the model for debug in raycaster
+            tile.model.cell = JSON.parse(JSON.stringify(tile.cell));
+            return tile.model;
           });
         try {
-          // this.intersects = rayCaster.intersectObjects(objectsToTest);
+          this.intersects = rayCaster.intersectObjects(objectsToTest);
         } catch (error) {
-          console.log("object to test", objectsToTest);
-          console.error("Error while intersecting objects", error);
+          console.error("Error with raycaster", error);
         }
-        // this.intersects.forEach((intersect) => {
-        //   intersect.object.material.opacity = 0.25;
-        // });
+        this.intersects.forEach((intersect) => {
+          intersect.object.material.opacity = 0.25;
+        });
       }
     }
 

@@ -13,6 +13,8 @@ export default class Resources extends EventEmitter {
     this.toLoad = this.sources.length;
     this.loaded = 0;
 
+    this.ready = false;
+
     this.setLoaders();
     this.startLoading();
   }
@@ -60,6 +62,7 @@ export default class Resources extends EventEmitter {
     this.loaded++;
 
     if (this.loaded === this.toLoad) {
+      this.ready = true;
       this.trigger("ready");
     }
   }

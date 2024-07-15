@@ -129,72 +129,82 @@ export default class World {
    * @param {THREE.Vector3} cellSize
    */
   instantiateMap(map, prototypes, cellSize) {
-    this.finalMap = map;
-    this.tilesMap = [];
-    for (let x = 0; x < map.length; x++) {
-      this.tilesMap[x] = [];
-      for (let y = 0; y < map[x].length; y++) {
-        this.tilesMap[x][y] = [];
-        for (let z = 0; z < map[x][y].length; z++) {
-          this.tilesMap[x][y][z] = null;
+    if (this.resources.ready) {
+      this.finalMap = map;
+      this.tilesMap = [];
+      for (let x = 0; x < map.length; x++) {
+        this.tilesMap[x] = [];
+        for (let y = 0; y < map[x].length; y++) {
+          this.tilesMap[x][y] = [];
+          for (let z = 0; z < map[x][y].length; z++) {
+            this.tilesMap[x][y][z] = null;
+          }
         }
       }
-    }
 
-    for (let x = 0; x < map.length; x++) {
-      for (let y = 0; y < map[x].length; y++) {
-        for (let z = 0; z < map[x][y].length; z++) {
-          const cell = map[x][y][z];
+      for (let x = 0; x < map.length; x++) {
+        for (let y = 0; y < map[x].length; y++) {
+          for (let z = 0; z < map[x][y].length; z++) {
+            const cell = map[x][y][z];
 
-          if (this.debug.active && !cell.collapsed) {
-            // Select error color
-            let color;
-            if (cell.possiblePrototypeIds.length === 0) {
-              color = 0xff0000; // RED = Not collapsed but no possible prototype
-            } else {
-              color = 0x0000ff; // BLUE = Not collapsed
+            if (this.debug.active && !cell.collapsed) {
+              // Select error color
+              let color;
+              if (cell.possiblePrototypeIds.length === 0) {
+                color = 0xff0000; // RED = Not collapsed but no possible prototype
+              } else {
+                color = 0x0000ff; // BLUE = Not collapsed
+              }
+
+              const geometry = new THREE.BoxGeometry(
+                cellSize.x * 0.9,
+                cellSize.y * 0.9,
+                cellSize.z * 0.9,
+              );
+
+              const material = new THREE.MeshBasicMaterial({
+                color: color,
+              });
+
+              material.transparent = true;
+              material.opacity = 0.1;
+
+              const cube = new THREE.Mesh(geometry, material);
+              cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
+
+              this.tilesMap[x][y][z] = { model: cube, cell: cell };
+
+              this.scene.add(cube);
+              continue;
             }
 
-            const geometry = new THREE.BoxGeometry(
-              cellSize.x * 0.9,
-              cellSize.y * 0.9,
-              cellSize.z * 0.9,
-            );
+            const prototype = Prototype.getPrototypeById(cell.prototypeId);
 
-            const material = new THREE.MeshBasicMaterial({
-              color: color,
-            });
-
-            material.transparent = true;
-            material.opacity = 0.1;
-
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
-
-            this.tilesMap[x][y][z] = { model: cube, cell: cell };
-
-            this.scene.add(cube);
-            continue;
-          }
-
-          const prototype = Prototype.getPrototypeById(cell.prototypeId);
-
-          if (prototype) {
-            const tile = new Tile(
-              prototype,
-              new Vector3(x * cellSize.x, y * cellSize.y, z * cellSize.z),
-              this.tileDebugFolder,
-            );
-            this.tilesMap[x][y][z] = {
-              model: tile.model,
-              cell: cell,
-              tile: tile,
-            };
-          } else {
-            console.error("Prototype not found, cell :", cell);
+            if (prototype) {
+              const tile = new Tile(
+                prototype,
+                new Vector3(x * cellSize.x, y * cellSize.y, z * cellSize.z),
+                this.tileDebugFolder,
+              );
+              this.tilesMap[x][y][z] = {
+                model: tile.model,
+                cell: cell,
+              };
+              if (tile.model && tile.model.isObject3D) {
+                // avoid adding blank tiles TODO : blank tile as model ?
+                this.scene.add(tile.model);
+              }
+            } else {
+              console.error("Prototype not found, cell :", cell);
+            }
           }
         }
       }
+    } else {
+      // TODO : test
+      this.resources.on("ready", () => {
+        this.instantiateMap(map, prototypes, cellSize);
+      });
     }
   }
 
