@@ -4,21 +4,13 @@ import Stack from "../Utils/Language/Stack.js";
 import { prototypes } from "../Prototype.js";
 import Cell from "./Cell.js";
 import { randomBetween } from "../Utils/SeededRandom.js";
+import { DIRECTIONS } from "../Prototype_constants.js";
 
 /**
  * Utils
  */
 const deepCopy = (object) => {
   return JSON.parse(JSON.stringify(object));
-};
-
-const DIRECTIONS = {
-  posX: new THREE.Vector3(1, 0, 0),
-  negX: new THREE.Vector3(-1, 0, 0),
-  posY: new THREE.Vector3(0, 1, 0),
-  negY: new THREE.Vector3(0, -1, 0),
-  posZ: new THREE.Vector3(0, 0, 1),
-  negZ: new THREE.Vector3(0, 0, -1),
 };
 
 // Map Data
@@ -224,6 +216,7 @@ const getNeighboursDirection = (coords) => {
  * @returns {string[]} possiblePrototypes
  */
 const getPossiblePrototypes = (coords) => {
+  if (isOnSideBorder(coords)) return ["blank-R-1"];
   return getCell(coords).possiblePrototypeIds;
 };
 
@@ -353,7 +346,7 @@ const propagate = (coords) => {
       // Compare the two lists
       for (const neighbourPossiblePrototype of neighbourPossiblePrototypes) {
         if (!currentPossiblePrototypes.includes(neighbourPossiblePrototype)) {
-          constrain(neighbourCoords, neighbourPossiblePrototype);
+          constrain(neighbourCoords, neighbourPossiblePrototype); // neighbourCoords.x === 2 && neighbourCoords.y === 0 && neighbourCoords.z === 1 && neighbourPossiblePrototype.includes('wall')
           if (!stack.includes(neighbourCoords)) {
             stack.push(neighbourCoords);
           }
@@ -452,9 +445,9 @@ const start = () => {
 
 const manualIterate = () => {
   try {
-    while (!allSideBorderCollapsed()) {
-      sideBorderIteration();
-    }
+    // while (!allSideBorderCollapsed()) {
+    sideBorderIteration();
+    // }
     if (!isFullyCollapsed()) {
       console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
       iterate();

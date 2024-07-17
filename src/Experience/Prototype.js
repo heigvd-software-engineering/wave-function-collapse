@@ -1,268 +1,11 @@
 import Sources from "./sources.js";
-import * as THREE from "three";
-
-// TODO factorize (same as in WaveFunctionCollapse.js)
-const DIRECTIONS = {
-  posX: new THREE.Vector3(1, 0, 0),
-  negX: new THREE.Vector3(-1, 0, 0),
-  posY: new THREE.Vector3(0, 1, 0),
-  negY: new THREE.Vector3(0, -1, 0),
-  posZ: new THREE.Vector3(0, 0, 1),
-  negZ: new THREE.Vector3(0, 0, -1),
-};
-
-// Number of (π/2) rotations
-const TILE_ROTATION = {
-  R_None: -1, // For symmetrical tiles
-  R0: 0,
-  R1: 1,
-  R2: 2,
-  R3: 3,
-};
-
-// B = bottom
-// H = horizontal
-// V = vertical
-// S = symmetrical
-// G = ground
-// RG = reverse ground
-// F = flipped
-//
-// [V/H]_[SOCKET_ID]_[S/F]?_[G/RG]?_[ROTATION_Number]?_[B]?
-const SOCKET_TYPE = {
-  /*
-   xxxxxxx
-   x     x
-   x     x
-   x     x
-   xxxxxxx
-  */
-  H_0_S: "H_0_S",
-  /*
-   xxxxxxx
-   x  │  x
-   x  │  x
-   x  │  x
-   xxxxxxx
-  */
-  H_1_S: "H_1_S",
-  /*
-    xxxxxxx
-    x──┐  x
-    x  |  x
-    x  |  x
-    xxxxxxx
-   */
-  H_4: "H_4",
-  /*
-    xxxxxxx
-    x  ┌──x
-    x  |  x
-    x  |  x
-    xxxxxxx
-   */
-  H_4_F: "H_4_F",
-  /*
-    xxxxxxx
-    x─────x
-    x     x
-    x     x
-    xxxxxxx
-   */
-  H_5_S: "H_5_S",
-
-  ////
-  // VERTICALS
-  ////
-  /*
-   xxxxxxx
-   x     x
-   x     x
-   x     x
-   xxxxxxx
-  */
-  V_0_S: "V_0_S",
-  /*
-   xxxxxxx
-   x#####x
-   x#####x
-   x#####x
-   xxxxxxx
-  */
-  V_0_G_S: "V_0_G_S",
-  /*
-   xxxxxxx
-   x  │  x
-   x  │  x
-   x  │  x
-   xxxxxxx
-  */
-  V_1_0: "V_1_0",
-  /*
-   xxxxxxx
-   x     x
-   x─────x
-   x     x
-   xxxxxxx
-  */
-  V_1_1: "V_1_1",
-  /*
-   xxxxxxx
-   x     x
-   x─────x
-   x#####x
-   xxxxxxx
-  */
-  V_1_G_0: "V_1_G_0",
-  /*
-   xxxxxxx
-   x##│  x
-   x##│  x
-   x##│  x
-   xxxxxxx
-  */
-  V_1_G_1: "V_1_G_1",
-  /*
-   xxxxxxx
-   x#####x
-   x─────x
-   x     x
-   xxxxxxx
-  */
-  V_1_G_2: "V_1_G_2",
-  /*
-   xxxxxxx
-   x  │##x
-   x  │##x
-   x  │##x
-   xxxxxxx
-  */
-  V_1_G_3: "V_1_G_3",
-  /*
-   xxxxxxx
-   x     x
-   x  ┌──x
-   x  │  x
-   xxxxxxx
-  */
-  V_2_0: "V_2_0",
-  /*
-   xxxxxxx
-   x     x
-   x──┐  x
-   x  │  x
-   xxxxxxx
-  */
-  V_2_1: "V_2_1",
-  /*
-   xxxxxxx
-   x  |  x
-   x──│  x
-   x     x
-   xxxxxxx
-  */
-  V_2_2: "V_2_2",
-  /*
-   xxxxxxx
-   x  |  x
-   x  └──x
-   x     x
-   xxxxxxx
-  */
-  V_2_3: "V_2_3",
-  /*
-   xxxxxxx
-   x     x
-   x  ┌──x
-   x  │##x
-   xxxxxxx
-  */
-  V_2_G_0: "V_2_G_0",
-  /*
-   xxxxxxx
-   x     x
-   x──┐  x
-   x##│  x
-   xxxxxxx
-  */
-  V_2_G_1: "V_2_G_1",
-  /*
-   xxxxxxx
-   x##|  x
-   x──│  x
-   x     x
-   xxxxxxx
-  */
-  V_2_G_2: "V_2_G_2",
-  /*
-   xxxxxxx
-   x  |##x
-   x  └──x
-   x     x
-   xxxxxxx
-  */
-  V_2_G_3: "V_2_G_3",
-  /*
-   xxxxxxx
-   x#####x
-   x##┌──x
-   x##│  x
-   xxxxxxx
-  */
-  V_2_RG_0: "V_2_RG_0",
-  /*
-   xxxxxxx
-   x#####x
-   x──┐##x
-   x  │##x
-   xxxxxxx
-  */
-  V_2_RG_1: "V_2_RG_1",
-  /*
-   xxxxxxx
-   x  |##x
-   x──│##x
-   x#####x
-   xxxxxxx
-  */
-  V_2_RG_2: "V_2_RG_2",
-  /*
-   xxxxxxx
-   x##|  x
-   x##└──x
-   x#####x
-   xxxxxxx
-  */
-  V_2_RG_3: "V_2_RG_3",
-
-  //// VERTICALS BOTTOM
-  /*
-   xxxxxxx
-   x     x
-   x     x
-   x     x
-   xxxxxxx
-  */
-  V_0_S_B: "V_0_S_B",
-  V_1_B: "V_1_B",
-  V_1_F_B: "V_1_F_B",
-  V_2_0_B: "V_2_0_B",
-  V_2_1_B: "V_2_1_B",
-  V_2_2_B: "V_2_2_B",
-  V_2_3_B: "V_2_3_B",
-};
-
-// Tile types and their corresponding mesh names
-const TILE_TYPE = {
-  BLANK: "blank",
-  C1: "ceiling_1",
-  G1: "ground_1",
-  W1: "wall_1",
-  WA1: "wall_angle_1",
-  WART1: "wall_angle_reverse_top_1",
-  WAT1: "wall_angle_top_1",
-  WT1: "wall_top_1",
-};
+import { Vector3 } from "three";
+import {
+  DIRECTIONS,
+  SOCKET_TYPE,
+  TILE_TYPE,
+  TILE_ROTATION,
+} from "./Prototype_constants.js";
 
 class Prototype {
   constructor(type, rotation, sockets, weight = 0) {
@@ -289,7 +32,7 @@ class Prototype {
   }
 
   /**
-   * @param {THREE.Vector3} direction // TODO maybe change to a type ?
+   * @param {Vector3} direction // TODO maybe change to a type ?
    * @returns {String[]} possiblePrototypesIds
    */
   getPossiblePrototypeIdsInDirection(direction) {
@@ -360,6 +103,11 @@ const generateNeightbourIdList = () => {
           }
         } else {
           // Vertical V_...
+          console.log(
+            socket.verticalOrientation,
+            other_socket.verticalOrientation,
+            socket.verticalOrientation === other_socket.verticalOrientation,
+          );
           if (
             // TODO : Ground ?
             socket.socketId === other_socket.socketId &&
@@ -408,11 +156,12 @@ const getOppositeSocketFace = (socketFace) => {
  *   hasReverseGround: boolean,
  *   hasGround: boolean,
  *   isBottom: boolean
+ *   isBlank: boolean
  * }}
  */
 const getSocketType = (socket) => {
   return {
-    isHorizontal: socket.includes("H"),
+    isHorizontal: isHorizontalSocket(socket),
     socketId: getSocketId(socket),
     isSymmetrical: socket.includes("S"),
     hasGround: socket.includes("G"),
@@ -420,7 +169,12 @@ const getSocketType = (socket) => {
     isFlipped: socket.includes("F"),
     verticalOrientation: getVerticalSocketOrientation(socket),
     isBottom: socket.includes("B"),
+    isBlank: socket.split("_")[1] === "0",
   };
+};
+
+const isHorizontalSocket = (socket) => {
+  return socket.includes("H");
 };
 
 /**
@@ -436,15 +190,20 @@ const getSocketId = (socket) => {
 /**
  * Get the vertical orientation from the socket string (e.g. V_2_1_B -> 1)
  * @param socket
- * @returns socketOrientation
+ * @returns {string} socketOrientation
  */
 const getVerticalSocketOrientation = (socket) => {
-  const socketNoBottom = socket.replace("_B", "");
-  const split = socketNoBottom.split("_");
-  const orientation = split[split.length - 1];
-  return orientation;
+  if (!isHorizontalSocket(socket)) {
+    const socketNoBottom = socket.replace("_B", "");
+    const split = socketNoBottom.split("_");
+    const orientation = split[split.length - 1];
+    return orientation;
+  } else {
+    return "-1";
+  }
 };
 
+// TODO : X and Z seems to be inverted...
 // TODO : verifier les bottoms, la direction semble incorrecte
 const prototypes = [
   new Prototype(
@@ -453,12 +212,12 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_0_S,
       negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_0_S,
-      negY: SOCKET_TYPE.V_0_S_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_0_0_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_0_S,
     },
-    0,
+    1,
   ),
   new Prototype(
     TILE_TYPE.C1,
@@ -466,12 +225,12 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_5_S,
       negX: SOCKET_TYPE.H_5_S,
-      posY: SOCKET_TYPE.V_0_G_S,
-      negY: SOCKET_TYPE.V_0_S_B,
+      posY: SOCKET_TYPE.V_0_G_0,
+      negY: SOCKET_TYPE.V_0_0_B,
       posZ: SOCKET_TYPE.H_5_S,
       negZ: SOCKET_TYPE.H_5_S,
     },
-    1,
+    3,
   ),
   new Prototype(
     TILE_TYPE.W1,
@@ -479,12 +238,12 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_1_S,
       negX: SOCKET_TYPE.H_1_S,
-      posY: SOCKET_TYPE.V_1_1,
-      negY: SOCKET_TYPE.V_1_F_B,
+      posY: SOCKET_TYPE.V_1_0,
+      negY: SOCKET_TYPE.V_1_0_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_0_S,
     },
-    1,
+    2,
   ),
   new Prototype(
     TILE_TYPE.W1,
@@ -493,57 +252,44 @@ const prototypes = [
       posX: SOCKET_TYPE.H_0_S,
       negX: SOCKET_TYPE.H_0_S,
       posY: SOCKET_TYPE.V_1_1,
-      negY: SOCKET_TYPE.V_1_F_B,
+      negY: SOCKET_TYPE.V_1_1_B,
       posZ: SOCKET_TYPE.H_1_S,
       negZ: SOCKET_TYPE.H_1_S,
     },
-    1,
+    2,
   ),
-  new Prototype(
-    TILE_TYPE.W1,
-    TILE_ROTATION.R2,
-    {
-      posX: SOCKET_TYPE.H_1_S,
-      negX: SOCKET_TYPE.H_1_S,
-      posY: SOCKET_TYPE.V_1_1,
-      negY: SOCKET_TYPE.V_1_F_B,
-      posZ: SOCKET_TYPE.H_0_S,
-      negZ: SOCKET_TYPE.H_0_S,
-    },
-    1,
-  ),
-  new Prototype(
-    TILE_TYPE.W1,
-    TILE_ROTATION.R3,
-    {
-      posX: SOCKET_TYPE.H_0_S,
-      negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_1_1,
-      negY: SOCKET_TYPE.V_1_F_B,
-      posZ: SOCKET_TYPE.H_1_S,
-      negZ: SOCKET_TYPE.H_1_S,
-    },
-    1,
-  ),
+  // new Prototype(
+  //   TILE_TYPE.W1,
+  //   TILE_ROTATION.R2,
+  //   {
+  //     posX: SOCKET_TYPE.H_1_S,
+  //     negX: SOCKET_TYPE.H_1_S,
+  //     posY: SOCKET_TYPE.V_1_0,
+  //     negY: SOCKET_TYPE.V_1_0_B,
+  //     posZ: SOCKET_TYPE.H_0_S,
+  //     negZ: SOCKET_TYPE.H_0_S,
+  //   },
+  //   2,
+  // ),
+  // new Prototype(
+  //   TILE_TYPE.W1,
+  //   TILE_ROTATION.R3,
+  //   {
+  //     posX: SOCKET_TYPE.H_0_S,
+  //     negX: SOCKET_TYPE.H_0_S,
+  //     posY: SOCKET_TYPE.V_1_1,
+  //     negY: SOCKET_TYPE.V_1_1_B,
+  //     posZ: SOCKET_TYPE.H_1_S,
+  //     negZ: SOCKET_TYPE.H_1_S,
+  //   },
+  //   2,
+  // ),
   new Prototype(
     TILE_TYPE.WA1,
     TILE_ROTATION.R0,
     {
       posX: SOCKET_TYPE.H_1_S,
       negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_2_2,
-      negY: SOCKET_TYPE.V_2_2_B,
-      posZ: SOCKET_TYPE.H_1_S,
-      negZ: SOCKET_TYPE.H_0_S,
-    },
-    1,
-  ),
-  new Prototype(
-    TILE_TYPE.WA1,
-    TILE_ROTATION.R1,
-    {
-      posX: SOCKET_TYPE.H_0_S,
-      negX: SOCKET_TYPE.H_1_S,
       posY: SOCKET_TYPE.V_2_1,
       negY: SOCKET_TYPE.V_2_1_B,
       posZ: SOCKET_TYPE.H_1_S,
@@ -553,12 +299,25 @@ const prototypes = [
   ),
   new Prototype(
     TILE_TYPE.WA1,
+    TILE_ROTATION.R1,
+    {
+      posX: SOCKET_TYPE.H_0_S,
+      negX: SOCKET_TYPE.H_1_S,
+      posY: SOCKET_TYPE.V_2_2,
+      negY: SOCKET_TYPE.V_2_2_B,
+      posZ: SOCKET_TYPE.H_1_S,
+      negZ: SOCKET_TYPE.H_0_S,
+    },
+    1,
+  ),
+  new Prototype(
+    TILE_TYPE.WA1,
     TILE_ROTATION.R2,
     {
       posX: SOCKET_TYPE.H_0_S,
       negX: SOCKET_TYPE.H_1_S,
-      posY: SOCKET_TYPE.V_2_0,
-      negY: SOCKET_TYPE.V_2_0_B,
+      posY: SOCKET_TYPE.V_2_3,
+      negY: SOCKET_TYPE.V_2_3_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_1_S,
     },
@@ -570,8 +329,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_1_S,
       negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_2_3,
-      negY: SOCKET_TYPE.V_2_3_B,
+      posY: SOCKET_TYPE.V_2_0,
+      negY: SOCKET_TYPE.V_2_0_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_1_S,
     },
@@ -583,8 +342,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_4_F,
       negX: SOCKET_TYPE.H_5_S,
-      posY: SOCKET_TYPE.V_2_RG_1,
-      negY: SOCKET_TYPE.V_2_2_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_1_B,
       posZ: SOCKET_TYPE.H_4,
       negZ: SOCKET_TYPE.H_5_S,
     },
@@ -596,8 +355,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_5_S,
       negX: SOCKET_TYPE.H_4,
-      posY: SOCKET_TYPE.V_2_RG_2,
-      negY: SOCKET_TYPE.V_2_1_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_2_B,
       posZ: SOCKET_TYPE.H_4_F,
       negZ: SOCKET_TYPE.H_5_S,
     },
@@ -609,8 +368,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_5_S,
       negX: SOCKET_TYPE.H_4_F,
-      posY: SOCKET_TYPE.V_2_RG_3,
-      negY: SOCKET_TYPE.V_2_0_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_3_B,
       posZ: SOCKET_TYPE.H_5_S,
       negZ: SOCKET_TYPE.H_4,
     },
@@ -622,8 +381,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_4,
       negX: SOCKET_TYPE.H_5_S,
-      posY: SOCKET_TYPE.V_2_RG_0,
-      negY: SOCKET_TYPE.V_2_3_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_0_B,
       posZ: SOCKET_TYPE.H_5_S,
       negZ: SOCKET_TYPE.H_4_F,
     },
@@ -635,8 +394,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_4,
       negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_2_G_1,
-      negY: SOCKET_TYPE.V_2_2_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_1_B,
       posZ: SOCKET_TYPE.H_4_F,
       negZ: SOCKET_TYPE.H_0_S,
     },
@@ -648,8 +407,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_0_S,
       negX: SOCKET_TYPE.H_4_F,
-      posY: SOCKET_TYPE.V_2_G_2,
-      negY: SOCKET_TYPE.V_2_1_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_2_B,
       posZ: SOCKET_TYPE.H_4,
       negZ: SOCKET_TYPE.H_0_S,
     },
@@ -661,8 +420,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_0_S,
       negX: SOCKET_TYPE.H_4,
-      posY: SOCKET_TYPE.V_2_G_3,
-      negY: SOCKET_TYPE.V_2_0_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_3_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_4_F,
     },
@@ -674,8 +433,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_4_F,
       negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_2_G_0,
-      negY: SOCKET_TYPE.V_2_3_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_2_0_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_4,
     },
@@ -687,8 +446,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_4,
       negX: SOCKET_TYPE.H_4_F,
-      posY: SOCKET_TYPE.V_1_G_1,
-      negY: SOCKET_TYPE.V_1_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_1_0_B,
       posZ: SOCKET_TYPE.H_5_S,
       negZ: SOCKET_TYPE.H_0_S,
     },
@@ -700,8 +459,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_0_S,
       negX: SOCKET_TYPE.H_5_S,
-      posY: SOCKET_TYPE.V_1_G_2,
-      negY: SOCKET_TYPE.V_1_F_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_1_1_B,
       posZ: SOCKET_TYPE.H_4,
       negZ: SOCKET_TYPE.H_4_F,
     },
@@ -713,8 +472,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_4_F,
       negX: SOCKET_TYPE.H_4,
-      posY: SOCKET_TYPE.V_1_G_3,
-      negY: SOCKET_TYPE.V_1_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_1_0_B,
       posZ: SOCKET_TYPE.H_0_S,
       negZ: SOCKET_TYPE.H_5_S,
     },
@@ -726,8 +485,8 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_5_S,
       negX: SOCKET_TYPE.H_0_S,
-      posY: SOCKET_TYPE.V_1_G_0,
-      negY: SOCKET_TYPE.V_1_F_B,
+      posY: SOCKET_TYPE.V_0_0,
+      negY: SOCKET_TYPE.V_1_1_B,
       posZ: SOCKET_TYPE.H_4_F,
       negZ: SOCKET_TYPE.H_4,
     },
@@ -749,6 +508,11 @@ generateNeightbourIdList();
 // }
 // });
 
+/**
+ * Get the prototype by its id
+ * @param id
+ * @returns {Prototype}
+ */
 const getPrototypeById = (id) => {
   return prototypes.find((prototype) => prototype.id === id);
 };

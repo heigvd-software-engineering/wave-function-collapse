@@ -25,11 +25,11 @@ export default class World {
       // Setup
       this.environment = new Environment();
 
-      // // Debug for showing each prototype once (without directions, useful for seeing a prototype in every direction)
-      // const axesHelper = new THREE.AxesHelper(20);
-      // axesHelper.position.set(-4, -4, -4);
-      // this.scene.add(axesHelper);
-      //
+      // Debug for showing each prototype once (without directions, useful for seeing a prototype in every direction)
+      const axesHelper = new THREE.AxesHelper(40);
+      axesHelper.position.set(-4, -4, -4);
+      this.scene.add(axesHelper);
+
       // this.tiles = {
       //   ceiling_1: new Tile(
       //     Prototype.getPrototypesByType("ceiling_1")[0],

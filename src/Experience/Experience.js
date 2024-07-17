@@ -6,6 +6,7 @@ import Time from "./Utils/Time.js";
 import Camera from "./Camera.js";
 import Renderer from "./Renderer.js";
 import World from "./World/World.js";
+// import World from "./World/WorldSingleTiles.js";
 import Resources from "./Utils/Resources.js";
 
 import sources from "./sources.js";
@@ -53,7 +54,9 @@ export default class Experience {
   start() {
     this.resources.on("ready", () => {
       const cellSize = new THREE.Vector3(4, 4, 4);
-      const mapSize = new THREE.Vector3(10, 3, 10);
+
+      // Keep in mind : on the side and the top border, the tiles are automatically blank
+      const mapSize = new THREE.Vector3(10, 5, 10);
 
       this.world.setMapHelper(mapSize, cellSize);
 

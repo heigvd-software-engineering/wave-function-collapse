@@ -48,7 +48,7 @@ class Cell {
       const prototypeByBiggestWeight = this.getBiggesteWeightPrototypes();
       theChosenOne =
         prototypeByBiggestWeight[
-          randomBetween(0, this.possiblePrototypeIds.length - 1)
+          randomBetween(0, prototypeByBiggestWeight.length - 1)
         ];
     }
     this.possiblePrototypeIds = [];
