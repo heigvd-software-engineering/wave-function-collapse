@@ -321,7 +321,6 @@ const getPossiblePrototypesInDirection = (coords, direction) => {
  * @param {THREE.Vector3} coords
  */
 const propagate = (coords) => {
-  console.log("propagate", coords);
   stack.push(coords);
 
   while (!stack.isEmpty()) {
@@ -366,6 +365,18 @@ const allSideBorderCollapsed = () => {
         if (isOnSideBorder(coords) && !getCell(coords).collapsed) {
           return false;
         }
+      }
+    }
+  }
+  return true;
+};
+
+const allBottomBorderCollapsed = () => {
+  for (let x = 0; x < mapSize.x; x++) {
+    for (let z = 0; z < mapSize.z; z++) {
+      const coords = new THREE.Vector3(x, 0, z);
+      if (isOnBottomBorder(coords) && !getCell(coords).collapsed) {
+        return false;
       }
     }
   }
@@ -419,7 +430,6 @@ const isOnBottomBorder = (coords) => {
 
 const iterate = () => {
   const coords = getMinEntropyCoords();
-  console.log(`iteration ${iteration} coords`, coords);
   collapse(coords);
   propagate(coords);
 };
@@ -438,34 +448,32 @@ const sideBorderIteration = () => {
   }
 };
 
-const renderResult = () => {
-  // TODO
-
+const bottomBorderIteration = (single) => {
   for (let x = 0; x < mapSize.x; x++) {
-    for (let y = 0; y < mapSize.y; y++) {
-      for (let z = 0; z < mapSize.z; z++) {
-        console.log(map[x][y][z]);
+    for (let z = 0; z < mapSize.z; z++) {
+      const coords = new THREE.Vector3(x, 0, z);
+      if (isOnBottomBorder(coords) && !getCell(coords).collapsed) {
+        collapse(coords);
+        propagate(coords);
+        if (single) return; // TODO : not clean
       }
     }
   }
 };
 
-const printMap = () => {
-  for (let x = 0; x < mapSize.x; x++) {
-    for (let y = 0; y < mapSize.y; y++) {
-      for (let z = 0; z < mapSize.z; z++) {
-        console.log(x, y, z);
-        console.log(map[x][y][z]);
-      }
-    }
-  }
-};
+// TODO : change this after startFromBottom mode is stable
+const startFromBottom = true;
 
 const start = () => {
   console.log("Start WFC");
   try {
     while (!allSideBorderCollapsed()) {
       sideBorderIteration();
+    }
+    if (startFromBottom) {
+      while (!allBottomBorderCollapsed()) {
+        bottomBorderIteration();
+      }
     }
     while (!isFullyCollapsed()) {
       console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
@@ -483,7 +491,10 @@ const manualIterate = () => {
     while (!allSideBorderCollapsed()) {
       sideBorderIteration();
     }
-    if (!isFullyCollapsed()) {
+    if (startFromBottom && !allBottomBorderCollapsed()) {
+      console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
+      bottomBorderIteration(true);
+    } else if (!isFullyCollapsed()) {
       console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
       iterate();
     } else {

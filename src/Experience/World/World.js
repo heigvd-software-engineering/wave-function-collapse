@@ -14,6 +14,7 @@ export default class World {
 
     this.finalMap = null;
     this.tilesMap = null;
+    this.helperTiles = [];
 
     if (this.debug.active) {
       this.tileDebugFolder = this.debug.ui.addFolder("TILES");
@@ -26,9 +27,11 @@ export default class World {
       this.environment = new Environment();
 
       // Debug for showing each prototype once (without directions, useful for seeing a prototype in every direction)
-      const axesHelper = new THREE.AxesHelper(40);
-      axesHelper.position.set(-4, -4, -4);
-      this.scene.add(axesHelper);
+      if (this.debug.active) {
+        const axesHelper = new THREE.AxesHelper(40);
+        axesHelper.position.set(-4, -4, -4);
+        this.scene.add(axesHelper);
+      }
     });
   }
 
@@ -54,10 +57,21 @@ export default class World {
             new THREE.Vector3(cellSize.x, cellSize.y, cellSize.z),
           );
           const helper = new THREE.Box3Helper(box, 0xff0000);
+          this.helperTiles.push(helper);
 
           this.scene.add(helper);
         }
       }
+    }
+  }
+
+  /**
+   * Clear the map helpers
+   * TODO : not clean, would be best in a helper array
+   */
+  clearMapHelper() {
+    for (let i = 0; i < this.helperTiles.length; i++) {
+      this.scene.remove(this.helperTiles[i]);
     }
   }
 
@@ -86,34 +100,45 @@ export default class World {
           for (let z = 0; z < map[x][y].length; z++) {
             const cell = map[x][y][z];
 
-            if (this.debug.active && !cell.collapsed) {
-              // Select error color
-              let color;
-              if (cell.possiblePrototypeIds.length === 0) {
-                color = 0xff0000; // RED = Not collapsed but no possible prototype
+            if (!cell.collapsed) {
+              if (this.debug.active) {
+                // Select error color
+                let color;
+                if (cell.possiblePrototypeIds.length === 0) {
+                  color = 0xff0000; // RED = Not collapsed but no possible prototype
+                } else {
+                  color = 0x0000ff; // BLUE = Not collapsed
+                }
+
+                const geometry = new THREE.BoxGeometry(
+                  cellSize.x * 0.9,
+                  cellSize.y * 0.9,
+                  cellSize.z * 0.9,
+                );
+
+                const material = new THREE.MeshBasicMaterial({
+                  color: color,
+                });
+
+                material.transparent = true;
+                material.opacity = 0.1;
+
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(
+                  x * cellSize.x,
+                  y * cellSize.y,
+                  z * cellSize.z,
+                );
+
+                this.tilesMap[x][y][z] = { model: cube, cell: cell };
+
+                this.scene.add(cube);
               } else {
-                color = 0x0000ff; // BLUE = Not collapsed
+                this.tilesMap[x][y][z] = {
+                  model: { isObject3D: false },
+                  cell: cell,
+                };
               }
-
-              const geometry = new THREE.BoxGeometry(
-                cellSize.x * 0.9,
-                cellSize.y * 0.9,
-                cellSize.z * 0.9,
-              );
-
-              const material = new THREE.MeshBasicMaterial({
-                color: color,
-              });
-
-              material.transparent = true;
-              material.opacity = 0.1;
-
-              const cube = new THREE.Mesh(geometry, material);
-              cube.position.set(x * cellSize.x, y * cellSize.y, z * cellSize.z);
-
-              this.tilesMap[x][y][z] = { model: cube, cell: cell };
-
-              this.scene.add(cube);
               continue;
             }
 
@@ -131,6 +156,7 @@ export default class World {
               );
               this.tilesMap[x][y][z] = {
                 model: tile.model,
+                tile: tile,
                 cell: cell,
               };
               if (tile.model && tile.model.isObject3D) {
@@ -153,18 +179,23 @@ export default class World {
 
   /**
    * Clear the world
-   * TODO : not clean (difference between Tiles and "Debug cube")
-   * TODO : not working properly
+   * TODO : WIP
    */
   clear() {
+    this.clearMapHelper();
+
     if (!this.finalMap) return;
 
+    // TODO : not clean
     this.tilesMap.forEach((x) => {
       x.forEach((y) => {
         y.forEach((z) => {
           if (z) {
             if (z.clear) {
               z.clear();
+            }
+            if (z.tile) {
+              z.tile.clear();
             }
             this.scene.remove(z.model);
           }

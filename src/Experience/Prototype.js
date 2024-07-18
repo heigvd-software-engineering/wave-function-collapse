@@ -103,11 +103,6 @@ const generateNeightbourIdList = () => {
           }
         } else {
           // Vertical V_...
-          console.log(
-            socket.verticalOrientation,
-            other_socket.verticalOrientation,
-            socket.verticalOrientation === other_socket.verticalOrientation,
-          );
           if (
             // TODO : Ground ?
             socket.socketId === other_socket.socketId &&
@@ -225,12 +220,12 @@ const prototypes = [
     {
       posX: SOCKET_TYPE.H_5_S,
       negX: SOCKET_TYPE.H_5_S,
-      posY: SOCKET_TYPE.V_0_G_0,
+      posY: SOCKET_TYPE.V_0_0,
       negY: SOCKET_TYPE.V_0_0_B,
       posZ: SOCKET_TYPE.H_5_S,
       negZ: SOCKET_TYPE.H_5_S,
     },
-    3,
+    1,
   ),
   new Prototype(
     TILE_TYPE.W1,
@@ -495,18 +490,6 @@ const prototypes = [
 ];
 
 generateNeightbourIdList();
-
-// prototypes.forEach((prototype) => {
-// console.log("\n\n");
-// console.log(prototype.id);
-// console.log(prototype.mesh);
-// for (let validNeighboursKey in prototype.valid_neighbours) {
-//   console.log("## " + validNeighboursKey);
-//   prototype.valid_neighbours[validNeighboursKey].forEach((neighbour) => {
-//     console.log("# " + neighbour.id);
-//   });
-// }
-// });
 
 /**
  * Get the prototype by its id

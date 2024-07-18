@@ -6,7 +6,7 @@ import Time from "./Utils/Time.js";
 import Camera from "./Camera.js";
 import Renderer from "./Renderer.js";
 import World from "./World/World.js";
-// import World from "./World/WorldSingleTiles.js";
+import WorldSingleTiles from "./World/WorldSingleTiles.js";
 import Resources from "./Utils/Resources.js";
 
 import sources from "./sources.js";
@@ -17,7 +17,7 @@ import { mapRange } from "gsap/gsap-core";
 let instance = null;
 
 export default class Experience {
-  constructor(_canvas, cellSize = 4, mapSize = 10) {
+  constructor(_canvas) {
     // Singleton
     if (instance) {
       return instance;
@@ -38,7 +38,66 @@ export default class Experience {
     this.resources = new Resources(sources);
     this.camera = new Camera();
     this.renderer = new Renderer();
-    this.world = new World();
+
+    if (this.debug.active && this.debug.singleTileDebug) {
+      this.world = new WorldSingleTiles();
+    } else {
+      this.world = new World();
+    }
+
+    this.wfcDebugObject = {
+      manualIteration: () => {
+        const finalMap = WFC.manualIterate();
+        this.setMap(finalMap);
+      },
+      resumeOrStartIterations: () => {
+        const finalMap = WFC.start();
+        this.setMap(finalMap);
+      },
+      clearWFC: () => {
+        WFC.reset();
+        this.world.clear();
+      },
+    };
+
+    // Keep in mind : on the side and the top border, the tiles are automatically blank
+    /**
+     * Size of the map in a 3D vector
+     * @type {THREE.Vector3}
+     */
+    this.mapSize = new THREE.Vector3(10, 5, 10);
+    this.cellSize = new THREE.Vector3(4, 4, 4);
+
+    if (!this.debug.singleTileDebug) {
+      const mapSizeDebugFolder = this.debug.ui.addFolder("Map Size");
+      mapSizeDebugFolder
+        .add(this.mapSize, "x")
+        .min(4)
+        .max(20)
+        .step(1)
+        .onFinishChange(() => {
+          this.wfcDebugObject.clearWFC();
+        })
+        .name("X");
+      mapSizeDebugFolder
+        .add(this.mapSize, "y")
+        .min(2)
+        .max(10)
+        .step(1)
+        .onFinishChange(() => {
+          this.wfcDebugObject.clearWFC();
+        })
+        .name("Y");
+      mapSizeDebugFolder
+        .add(this.mapSize, "z")
+        .min(4)
+        .max(20)
+        .step(1)
+        .onFinishChange(() => {
+          this.wfcDebugObject.clearWFC();
+        })
+        .name("Z");
+    }
 
     // Resize event
     this.sizes.on("resize", () => {
@@ -51,53 +110,49 @@ export default class Experience {
     });
   }
 
+  setMap(map) {
+    this.world.clear();
+
+    if (this.debug.active) {
+      this.world.setMapHelper(this.mapSize, this.cellSize);
+    }
+
+    this.world.instantiateMap(map, Prototype.prototypes, this.cellSize);
+
+    if (this.debug.active) this.addClickEvent();
+  }
+
+  // TODO : merge with start()
+  startExperience() {
+    if (this.debug.active) {
+      console.log("jdfljflfdls");
+      this.world.setMapHelper(this.mapSize, this.cellSize);
+    }
+
+    WFC.initialize({
+      newMapSize: this.mapSize,
+    });
+  }
+
   start() {
     this.resources.on("ready", () => {
-      const cellSize = new THREE.Vector3(4, 4, 4);
+      this.startExperience();
 
-      // Keep in mind : on the side and the top border, the tiles are automatically blank
-      const mapSize = new THREE.Vector3(10, 5, 10);
+      // TODO : keep this debug without debug mode active to start the WFC, need to make real button in the future instead of debug ui
+      // Do not keep this when in singleTileDebug mode
+      if (!this.debug.singleTileDebug) {
+        this.debug.ui
+          .add(this.wfcDebugObject, "manualIteration")
+          .name("Manual Iteration");
 
-      this.world.setMapHelper(mapSize, cellSize);
+        this.debug.ui
+          .add(this.wfcDebugObject, "resumeOrStartIterations")
+          .name("Resume or Start Iterations");
 
-      WFC.initialize({
-        newMapSize: mapSize,
-      });
-
-      // const finalMap = WFC.start();
-
-      let WfcDebugObject = {
-        manualIteration: () => {
-          const finalMap = WFC.manualIterate();
-
-          this.world.clear();
-          this.world.instantiateMap(finalMap, Prototype.prototypes, cellSize);
-
-          if (this.debug.active) this.addClickEvent();
-        },
-        resumeOrStartIterations: () => {
-          const finalMap = WFC.start();
-
-          this.world.clear();
-          this.world.instantiateMap(finalMap, Prototype.prototypes, cellSize);
-
-          if (this.debug.active) this.addClickEvent();
-        },
-        clearWFC: () => {
-          WFC.reset();
-          this.world.clear();
-        },
-      };
-
-      this.debug.ui
-        .add(WfcDebugObject, "manualIteration")
-        .name("Manual Iteration");
-
-      this.debug.ui
-        .add(WfcDebugObject, "resumeOrStartIterations")
-        .name("Resume or Start Iterations");
-
-      this.debug.ui.add(WfcDebugObject, "clearWFC").name("Clear");
+        this.debug.ui
+          .add(this.wfcDebugObject, "clearWFC")
+          .name("Clear the map and WFC");
+      }
     });
   }
 
@@ -123,7 +178,8 @@ export default class Experience {
     // Click on a tile TODO Click Debug not working currently
     window.addEventListener("click", (event) => {
       if (this.intersects?.length > 0) {
-        console.info("# Showing tile contents :");
+        console.log("Clicked on a tile"); // TODO : to remove
+        console.log("Showing tile contents :");
         this.intersects
           .sort((a, b) => a.distance - b.distance)
           .forEach((intersect) => {
@@ -183,6 +239,7 @@ export default class Experience {
     this.renderer.update();
   }
 
+  // TOOD : WIP, not tested
   destroy() {
     this.sizes.off("resize");
     this.time.off("tick");

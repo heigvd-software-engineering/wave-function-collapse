@@ -166,5 +166,18 @@ export default class Tile {
     );
   }
 
+  clear() {
+    this.clearModel();
+    this.clearBoxHelper();
+  }
+
+  clearModel() {
+    this.scene.remove(this.model);
+  }
+
+  clearBoxHelper() {
+    this.scene.remove(this.helper);
+  }
+
   update() {}
 }

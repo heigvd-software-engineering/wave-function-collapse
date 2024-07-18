@@ -31,10 +31,12 @@ export default class World {
       axesHelper.position.set(-2, 0, -2);
       this.scene.add(axesHelper);
 
-      // const prototype = Prototype.getPrototypesByType("ceiling_1")[0];
+      // Debug for showing a single tile, change the [ ] number to get another rotation TODO
+      // const prototype = Prototype.getPrototypesByType("blank")[0];
+      const prototype = Prototype.getPrototypesByType("ceiling_1")[0];
       // const prototype = Prototype.getPrototypesByType("wall_1")[1];
       // const prototype = Prototype.getPrototypesByType("wall_top_1")[3];
-      const prototype = Prototype.getPrototypesByType("wall_angle_1")[3];
+      // const prototype = Prototype.getPrototypesByType("wall_angle_1")[3];
       // const prototype = Prototype.getPrototypesByType("wall_angle_reverse_top_1")[3];
       // const prototype = Prototype.getPrototypesByType("wall_angle_top_1")[3];
 
@@ -43,28 +45,6 @@ export default class World {
         new THREE.Vector3(0),
         this.tileDebugFolder,
       );
-      //  new Tile("ground_1"),
-      // wall_1: new Tile(
-      //   new THREE.Vector3(0),
-      //   this.tileDebugFolder,
-      // )
-      //  new Tile(
-      //   new THREE.Vector3(0),
-      //   this.tileDebugFolder,
-      // )
-      // new Tile(
-      //   new THREE.Vector3(),
-      //   this.tileDebugFolder,
-      // )
-      // new Tile(
-      //   new THREE.Vector3(0),
-      //   this.tileDebugFolder,
-      // )
-      //  new Tile(
-      //   Prototype.getPrototypesByType("wall_angle_top_1")[0],
-      //   new THREE.Vector3(0),
-      //   this.tileDebugFolder,
-      // )
 
       this.scene.add(this.tile.model);
       this.tile.setHelper();
@@ -156,8 +136,6 @@ export default class World {
 
   /**
    * Clear the world
-   * TODO : not clean (difference between Tiles and "Debug cube")
-   * TODO : not working properly
    */
   clear() {}
 
