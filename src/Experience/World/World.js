@@ -29,67 +29,6 @@ export default class World {
       const axesHelper = new THREE.AxesHelper(40);
       axesHelper.position.set(-4, -4, -4);
       this.scene.add(axesHelper);
-
-      // this.tiles = {
-      //   ceiling_1: new Tile(
-      //     Prototype.getPrototypesByType("ceiling_1")[0],
-      //     new THREE.Vector3(0),
-      //     this.tileDebugFolder,
-      //   ),
-      //   // ground_1: new Tile("ground_1"),
-      //   wall_1: new Tile(
-      //     Prototype.getPrototypesByType("wall_1")[0],
-      //     new THREE.Vector3(0),
-      //     this.tileDebugFolder,
-      //   ),
-      //   wall_angle_1: new Tile(
-      //     Prototype.getPrototypesByType("wall_angle_1")[0],
-      //     new THREE.Vector3(0),
-      //     this.tileDebugFolder,
-      //   ),
-      //   wall_angle_reverse_top_1: new Tile(
-      //     Prototype.getPrototypesByType("wall_angle_reverse_top_1")[0],
-      //     new THREE.Vector3(0),
-      //     this.tileDebugFolder,
-      //   ),
-      //   wall_angle_top_1: new Tile(
-      //     Prototype.getPrototypesByType("wall_angle_top_1")[0],
-      //     new THREE.Vector3(0),
-      //     this.tileDebugFolder,
-      //   ),
-      //   wall_top_1: new Tile(
-      //     Prototype.getPrototypesByType("wall_top_1")[0],
-      //     new THREE.Vector3(0),
-      //     this.tileDebugFolder,
-      //   ),
-      // };
-      //
-      // let i = 0;
-      // for (let tileType in this.tiles) {
-      //   this.tiles[tileType].model.position.z = i * (Tile.TILE_WIDTH + 1);
-      //   this.tiles[tileType].updateHelper();
-      //   i++;
-      // }
-
-      //// Debug for showing every prototype and their different direction
-      // this.tiles = {};
-      // Prototype.prototypes.forEach((prototypes) => {
-      //   if (!this.tiles[prototypes.type]) this.tiles[prototypes.type] = [];
-      //   this.tiles[prototypes.type].push(new Tile(prototypes));
-      // });
-      //
-      // let i = -4;
-      // let j = -4;
-      // for (let tileType in this.tiles) {
-      //   this.tiles[tileType].forEach((tile) => {
-      //     tile.model.position.x = i * (Tile.TILE_WIDTH + 1);
-      //     tile.model.position.z = j * (Tile.TILE_WIDTH + 1);
-      //     tile.updateHelper();
-      //     i++;
-      //   });
-      //   i = 0;
-      //   j++;
-      // }
     });
   }
 
@@ -183,7 +122,11 @@ export default class World {
             if (prototype) {
               const tile = new Tile(
                 prototype,
-                new Vector3(x * cellSize.x, y * cellSize.y, z * cellSize.z),
+                new Vector3(
+                  x * cellSize.x,
+                  y * cellSize.y - Tile.TILE_HEIGHT / 2, // TODO : fix this offset
+                  z * cellSize.z,
+                ),
                 this.tileDebugFolder,
               );
               this.tilesMap[x][y][z] = {
