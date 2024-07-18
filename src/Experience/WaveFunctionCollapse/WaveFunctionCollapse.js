@@ -372,14 +372,50 @@ const allSideBorderCollapsed = () => {
   return true;
 };
 
-function isOnSideBorder(coords) {
-  return (
-    coords.x === 0 ||
-    coords.x === mapSize.x - 1 ||
-    coords.z === 0 ||
-    coords.z === mapSize.z - 1
-  );
-}
+/**
+ * Returns true if the cell is on the side border of the map
+ * @param {THREE.Vector3} coords
+ * @returns {boolean}
+ */
+const isOnSideBorder = (coords) => {
+  return isOnXSideBorder(coords) || isOnZSideBorder(coords);
+};
+
+/**
+ * Returns true if the cell is on the X side border of the map
+ * @param {THREE.Vector3} coords
+ * @returns {boolean}
+ */
+const isOnXSideBorder = (coords) => {
+  return coords.x === 0 || coords.x === mapSize.x - 1;
+};
+
+/**
+ * Returns true if the cell is on the Z side border of the map
+ * @param {THREE.Vector3} coords
+ * @returns {boolean}
+ */
+const isOnZSideBorder = (coords) => {
+  return coords.z === 0 || coords.z === mapSize.z - 1;
+};
+
+/**
+ * Returns true if the cell is on the top border of the map
+ * @param {THREE.Vector3} coords
+ * @returns {boolean}
+ */
+const isOnTopBorder = (coords) => {
+  return coords.y === mapSize.y - 1;
+};
+
+/**
+ * Returns true if the cell is on the bottom border of the map
+ * @param {THREE.Vector3} coords
+ * @returns {boolean}
+ */
+const isOnBottomBorder = (coords) => {
+  return coords.y === 0;
+};
 
 const iterate = () => {
   const coords = getMinEntropyCoords();
@@ -393,8 +429,7 @@ const sideBorderIteration = () => {
     for (let y = 0; y < mapSize.y; y++) {
       for (let z = 0; z < mapSize.z; z++) {
         const coords = new THREE.Vector3(x, y, z);
-        if (isOnSideBorder(coords)) {
-          console.log(`border iteration ${iteration} coords`, coords);
+        if (isOnSideBorder(coords) || isOnTopBorder(coords)) {
           collapse(coords, true);
           propagate(coords);
         }
@@ -445,9 +480,9 @@ const start = () => {
 
 const manualIterate = () => {
   try {
-    // while (!allSideBorderCollapsed()) {
-    sideBorderIteration();
-    // }
+    while (!allSideBorderCollapsed()) {
+      sideBorderIteration();
+    }
     if (!isFullyCollapsed()) {
       console.log(`Iteration ${iteration++} -- ${progressPercentage()}%`);
       iterate();
