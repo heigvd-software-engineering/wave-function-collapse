@@ -12,13 +12,6 @@ export default [
     ],
   },
   {
-    name: "environmentMapTextureCabin",
-    type: "texture",
-    path: [
-      "textures/environmentMap/interior_views_cozy_wood_cabin_with_cauldron_and_p.jpg",
-    ],
-  },
-  {
     name: "ceiling_1",
     type: "gltfModel",
     path: "models/3D_Tiles/ceiling_1.glb",
