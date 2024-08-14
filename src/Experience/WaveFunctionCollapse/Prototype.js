@@ -1,16 +1,10 @@
-import Sources from "./sources.js";
-import { Vector3 } from "three";
-import {
-  DIRECTIONS,
-  SOCKET_TYPE,
-  TILE_TYPE,
-  TILE_ROTATION,
-} from "./Prototype_constants.js";
+import { TILE_ROTATION, TILE_TYPE } from "../Tile_constants.js";
+import { DIRECTIONS } from "./Constants/Direction_constants.js";
+import { SOCKET_TYPE } from "../Socket_constants.js";
 
 class Prototype {
   constructor(type, rotation, sockets, weight = 0) {
     this.type = type;
-    this.mesh = Sources.find((source) => source.name === this.type)?.path;
     this.rotation = rotation;
     this.weight = weight;
 
@@ -24,9 +18,23 @@ class Prototype {
 
     /**
      * Valid Neighbours
-     * @type {}
+     * @type {{
+     *  posX: String[],
+     *  negX: String[],
+     *  posY: String[],
+     *  negY: String[],
+     *  posZ: String[],
+     *  negZ: String[]
+     * }}
      */
-    this.valid_neighbours = null;
+    this.valid_neighbours = {
+      posX: [],
+      negX: [],
+      posY: [],
+      negY: [],
+      posZ: [],
+      negZ: [],
+    };
 
     this.id = `${this.type}-R${this.rotation}`;
   }
@@ -58,7 +66,7 @@ class Prototype {
 }
 
 // TODO : not clean
-const generateNeightbourIdList = () => {
+const generateNeighbourIdList = () => {
   const grouped_prototypes = Object.groupBy(
     prototypes,
     (prototype) => prototype.type,
@@ -143,15 +151,14 @@ const getOppositeSocketFace = (socketFace) => {
  * (e.g. H_4_F -> {socketId: 4, isSymmetrical: false, verticalOrientation: 0, isFlipped: true, hasReverseGround: false, isHorizontal: true, hasGround: false, isBottom: false})
  * @param socket
  * @returns {{
- *   isHorizontal: boolean,
- *   socketId: socketId,
- *   isSymmetrical: boolean,
- *   verticalOrientation: number,
- *   isFlipped: boolean,
- *   hasReverseGround: boolean,
- *   hasGround: boolean,
- *   isBottom: boolean
- *   isBlank: boolean
+ *  socketId: string,
+ *  isSymmetrical: boolean,
+ *  verticalOrientation: string,
+ *  isFlipped: boolean,
+ *  hasReverseGround: boolean,
+ *  isHorizontal: boolean,
+ *  hasGround: boolean,
+ *  isBottom: boolean
  * }}
  */
 const getSocketType = (socket) => {
@@ -198,8 +205,6 @@ const getVerticalSocketOrientation = (socket) => {
   }
 };
 
-// TODO : X and Z seems to be inverted...
-// TODO : verifier les bottoms, la direction semble incorrecte
 const prototypes = [
   new Prototype(
     TILE_TYPE.BLANK,
@@ -489,7 +494,7 @@ const prototypes = [
   ),
 ];
 
-generateNeightbourIdList();
+generateNeighbourIdList();
 
 /**
  * Get the prototype by its id

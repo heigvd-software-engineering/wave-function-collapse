@@ -1,24 +1,3 @@
-import { Vector3 } from "three";
-
-// TODO factorize (same as in WaveFunctionCollapse.js)
-const DIRECTIONS = {
-  posX: new Vector3(1, 0, 0),
-  negX: new Vector3(-1, 0, 0),
-  posY: new Vector3(0, 1, 0),
-  negY: new Vector3(0, -1, 0),
-  posZ: new Vector3(0, 0, 1),
-  negZ: new Vector3(0, 0, -1),
-};
-
-// Number of (π/2) rotations
-const TILE_ROTATION = {
-  R_None: -1, // For symmetrical tiles
-  R0: 0,
-  R1: 1,
-  R2: 2,
-  R3: 3,
-};
-
 // B = bottom
 // H = horizontal
 // V = vertical
@@ -28,7 +7,7 @@ const TILE_ROTATION = {
 // F = flipped
 //
 // [V/H]_[SOCKET_ID]_[S/F]?_[G/RG]?_[ROTATION_Number]?_[B]?
-const SOCKET_TYPE = {
+export const SOCKET_TYPE = {
   /*
    xxxxxxx
    x     x
@@ -292,17 +271,3 @@ const SOCKET_TYPE = {
   */
   V_2_3_B: "V_2_3_B",
 };
-
-// Tile types and their corresponding mesh names
-const TILE_TYPE = {
-  BLANK: "blank",
-  C1: "ceiling_1",
-  G1: "ground_1",
-  W1: "wall_1",
-  WA1: "wall_angle_1",
-  WART1: "wall_angle_reverse_top_1",
-  WAT1: "wall_angle_top_1",
-  WT1: "wall_top_1",
-};
-
-export { DIRECTIONS, SOCKET_TYPE, TILE_ROTATION, TILE_TYPE };

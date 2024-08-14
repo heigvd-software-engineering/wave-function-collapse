@@ -1,6 +1,5 @@
-import { prototypes } from "../Prototype.js";
+import { prototypes } from "./Prototype.js";
 import { randomBetween } from "../Utils/SeededRandom.js";
-import { Vector3 } from "three";
 
 /**
  * Cell = position in the 3D matrix that represents the map.
@@ -40,7 +39,6 @@ class Cell {
    * ones from the list of possible prototypes)
    */
   collapse(isBlank = false) {
-    // TODO : use weight to select the prototype
     let theChosenOne;
     if (isBlank) {
       theChosenOne = "blank-R-1"; // TODO : remove hard coded value

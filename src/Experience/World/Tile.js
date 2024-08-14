@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import Experience from "../Experience.js";
 import { gsap } from "gsap";
-import * as Prototype from "../Prototype.js";
+import * as Prototype from "../WaveFunctionCollapse/Prototype.js";
 
 /**
  * A Tile is a 3D object that can be fit into a {Cell}
