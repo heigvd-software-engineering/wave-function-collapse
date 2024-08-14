@@ -1,34 +1,56 @@
-import Sources from "./sources.js";
-import { Vector3 } from "three";
+import { TILE_ROTATION, TILE_TYPE } from "./Constants/Tiles.js";
+import { DIRECTIONS } from "./Constants/Direction.js";
+import { SOCKET_TYPE } from "./Constants/Sockets.js";
 import {
-  DIRECTIONS,
-  SOCKET_TYPE,
-  TILE_TYPE,
-  TILE_ROTATION,
-} from "./Prototype_constants.js";
+  socketsCompatiblityCheck,
+  getOppositeSocketFace,
+  getSocketType,
+} from "./SocketsUtils.js";
 
 class Prototype {
-  constructor(type, rotation, sockets, weight = 0) {
-    this.type = type;
-    this.mesh = Sources.find((source) => source.name === this.type)?.path;
+  constructor(name, rotation, sockets, weight = 0) {
+    /**
+     * Model name
+     * @type {String}
+     */
+    this.name = name;
+
+    /**
+     * Rotation of the model (0 to 3, clockwise)
+     * @type {Number}
+     */
     this.rotation = rotation;
+
+    /**
+     * Weight of the model (higher is more frequent)
+     * @type {number}
+     */
     this.weight = weight;
 
     // Sockets
-    this.posX = sockets.posX;
-    this.negX = sockets.negX;
-    this.posY = sockets.posY;
-    this.negY = sockets.negY;
-    this.posZ = sockets.posZ;
-    this.negZ = sockets.negZ;
+    this.sockets = sockets;
 
     /**
      * Valid Neighbours
-     * @type {}
+     * @type {{
+     *  posX: String[],
+     *  negX: String[],
+     *  posY: String[],
+     *  negY: String[],
+     *  posZ: String[],
+     *  negZ: String[]
+     * }}
      */
-    this.valid_neighbours = null;
+    this.valid_neighbours = {
+      posX: [],
+      negX: [],
+      posY: [],
+      negY: [],
+      posZ: [],
+      negZ: [],
+    };
 
-    this.id = `${this.type}-R${this.rotation}`;
+    this.id = `${this.name}-R${this.rotation}`;
   }
 
   /**
@@ -58,12 +80,7 @@ class Prototype {
 }
 
 // TODO : not clean
-const generateNeightbourIdList = () => {
-  const grouped_prototypes = Object.groupBy(
-    prototypes,
-    (prototype) => prototype.type,
-  );
-
+const generateNeighbourIdList = () => {
   prototypes.forEach((prototype) => {
     const valid_neighbours = {
       posX: [],
@@ -80,36 +97,11 @@ const generateNeightbourIdList = () => {
 
       // For each face of the prototype, check compatibility with all opposite faces from all other prototypes
       prototypes.forEach((other_prototype) => {
-        const socket = getSocketType(prototype[face]);
-        const other_socket = getSocketType(other_prototype[opposite_face]);
+        const socket = prototype.sockets[face];
+        const other_socket = other_prototype.sockets[opposite_face];
 
-        if (socket.isHorizontal) {
-          // Horizontal H_...
-          if (
-            socket.isSymmetrical &&
-            prototype[face] === other_prototype[opposite_face]
-          ) {
-            valid_neighbours[face].push(other_prototype);
-          } else {
-            // if Asymmetrical ..._F or none
-            // Should snap to the same opposite socket
-            // (if it has ..._F should snap to the same socket without _F and vice versa)
-            if (
-              prototype[face] === other_prototype[opposite_face] + "_F" ||
-              prototype[face] + "_F" === other_prototype[opposite_face]
-            ) {
-              valid_neighbours[face].push(other_prototype);
-            }
-          }
-        } else {
-          // Vertical V_...
-          if (
-            // TODO : Ground ?
-            socket.socketId === other_socket.socketId &&
-            socket.verticalOrientation === other_socket.verticalOrientation
-          ) {
-            valid_neighbours[face].push(other_prototype);
-          }
+        if (socketsCompatiblityCheck(socket, other_socket)) {
+          valid_neighbours[face].push(other_prototype);
         }
       });
     }
@@ -125,81 +117,6 @@ const generateNeightbourIdList = () => {
   });
 };
 
-/**
- * Get the opposite socket face (e.g. posZ -> negZ)
- * @param socketFace
- * @returns {string} opposite socketFace
- */
-const getOppositeSocketFace = (socketFace) => {
-  if (socketFace.includes("pos")) {
-    return socketFace.replace("pos", "neg");
-  } else {
-    return socketFace.replace("neg", "pos");
-  }
-};
-
-/**
- * Decode the socket string to an object
- * (e.g. H_4_F -> {socketId: 4, isSymmetrical: false, verticalOrientation: 0, isFlipped: true, hasReverseGround: false, isHorizontal: true, hasGround: false, isBottom: false})
- * @param socket
- * @returns {{
- *   isHorizontal: boolean,
- *   socketId: socketId,
- *   isSymmetrical: boolean,
- *   verticalOrientation: number,
- *   isFlipped: boolean,
- *   hasReverseGround: boolean,
- *   hasGround: boolean,
- *   isBottom: boolean
- *   isBlank: boolean
- * }}
- */
-const getSocketType = (socket) => {
-  return {
-    isHorizontal: isHorizontalSocket(socket),
-    socketId: getSocketId(socket),
-    isSymmetrical: socket.includes("S"),
-    hasGround: socket.includes("G"),
-    hasReverseGround: socket.includes("R"),
-    isFlipped: socket.includes("F"),
-    verticalOrientation: getVerticalSocketOrientation(socket),
-    isBottom: socket.includes("B"),
-    isBlank: socket.split("_")[1] === "0",
-  };
-};
-
-const isHorizontalSocket = (socket) => {
-  return socket.includes("H");
-};
-
-/**
- * Get the socket id from the socket string (e.g. H_5_S -> 5)
- * @param socket
- * @returns socketId
- */
-const getSocketId = (socket) => {
-  const split = socket.split("_");
-  return split[1];
-};
-
-/**
- * Get the vertical orientation from the socket string (e.g. V_2_1_B -> 1)
- * @param socket
- * @returns {string} socketOrientation
- */
-const getVerticalSocketOrientation = (socket) => {
-  if (!isHorizontalSocket(socket)) {
-    const socketNoBottom = socket.replace("_B", "");
-    const split = socketNoBottom.split("_");
-    const orientation = split[split.length - 1];
-    return orientation;
-  } else {
-    return "-1";
-  }
-};
-
-// TODO : X and Z seems to be inverted...
-// TODO : verifier les bottoms, la direction semble incorrecte
 const prototypes = [
   new Prototype(
     TILE_TYPE.BLANK,
@@ -489,7 +406,7 @@ const prototypes = [
   ),
 ];
 
-generateNeightbourIdList();
+generateNeighbourIdList();
 
 /**
  * Get the prototype by its id
@@ -501,7 +418,7 @@ const getPrototypeById = (id) => {
 };
 
 const getPrototypesByType = (type) => {
-  return prototypes.filter((prototype) => prototype.type === type);
+  return prototypes.filter((prototype) => prototype.name === type);
 };
 
 export {

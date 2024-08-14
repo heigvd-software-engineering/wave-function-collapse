@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import Experience from "../Experience.js";
 import { gsap } from "gsap";
-import * as Prototype from "../Prototype.js";
+import * as Prototype from "../WaveFunctionCollapse/Prototype.js";
 
 /**
  * A Tile is a 3D object that can be fit into a {Cell}
@@ -28,7 +28,7 @@ export default class Tile {
     }
 
     // Resource
-    if (this.prototype.type === Prototype.TILE_TYPE.BLANK) {
+    if (this.prototype.name === Prototype.TILE_TYPE.BLANK) {
       this.resource = null;
       this.model = {
         position: position.clone(),
@@ -36,7 +36,7 @@ export default class Tile {
         isObject3D: false,
       };
     } else {
-      this.resource = this.resources.items[this.prototype.type];
+      this.resource = this.resources.items[this.prototype.name];
       this.orientation = this.prototype.rotation;
       this.setModel();
     }

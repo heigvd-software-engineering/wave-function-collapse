@@ -10,9 +10,9 @@ import WorldSingleTiles from "./World/WorldSingleTiles.js";
 import Resources from "./Utils/Resources.js";
 
 import sources from "./sources.js";
-import * as WFC from "./WaveFunctionCollapse/WaveFunctionCollapse.js";
-import * as Prototype from "./Prototype.js";
-import { mapRange } from "gsap/gsap-core";
+import { WaveFunctionCollapse } from "./WaveFunctionCollapse/WaveFunctionCollapse.js";
+import * as Prototype from "./WaveFunctionCollapse/Prototype.js";
+import { prototypes } from "./WaveFunctionCollapse/Prototype.js"; // TODO : remove this import
 
 let instance = null;
 
@@ -45,20 +45,7 @@ export default class Experience {
       this.world = new World();
     }
 
-    this.wfcDebugObject = {
-      manualIteration: () => {
-        const finalMap = WFC.manualIterate();
-        this.setMap(finalMap);
-      },
-      resumeOrStartIterations: () => {
-        const finalMap = WFC.start();
-        this.setMap(finalMap);
-      },
-      clearWFC: () => {
-        WFC.reset();
-        this.world.clear();
-      },
-    };
+    // Wave Function Collapse
 
     // Keep in mind : on the side and the top border, the tiles are automatically blank
     /**
@@ -67,6 +54,22 @@ export default class Experience {
      */
     this.mapSize = new THREE.Vector3(10, 5, 10);
     this.cellSize = new THREE.Vector3(4, 4, 4);
+    this.WFC = new WaveFunctionCollapse(prototypes, this.mapSize);
+
+    this.wfcDebugObject = {
+      manualIteration: () => {
+        const partialMap = this.WFC.start(true);
+        this.setMap(partialMap);
+      },
+      resumeOrStartIterations: () => {
+        const finalMap = this.WFC.start();
+        this.setMap(finalMap);
+      },
+      clearWFC: () => {
+        this.WFC.reset();
+        this.world.clear();
+      },
+    };
 
     if (!this.debug.singleTileDebug) {
       const mapSizeDebugFolder = this.debug.ui.addFolder("Map Size");
@@ -122,21 +125,16 @@ export default class Experience {
     if (this.debug.active) this.addClickEvent();
   }
 
-  // TODO : merge with start()
-  startExperience() {
-    if (this.debug.active) {
-      console.log("jdfljflfdls");
-      this.world.setMapHelper(this.mapSize, this.cellSize);
-    }
-
-    WFC.initialize({
-      newMapSize: this.mapSize,
-    });
-  }
-
   start() {
     this.resources.on("ready", () => {
-      this.startExperience();
+      if (this.debug.active) {
+        this.world.setMapHelper(this.mapSize, this.cellSize);
+      }
+
+      // TODO : if bug with ressources init, put the new WaveFunctionCollapse in the resources ready event
+      // this.WFC.initialize({
+      //   newMapSize: this.mapSize,
+      // });
 
       // TODO : keep this debug without debug mode active to start the WFC, need to make real button in the future instead of debug ui
       // Do not keep this when in singleTileDebug mode
