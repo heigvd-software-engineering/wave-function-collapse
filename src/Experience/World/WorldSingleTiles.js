@@ -4,7 +4,7 @@ import Tile from "./Tile.js";
 import * as THREE from "three";
 import * as Prototype from "../WaveFunctionCollapse/Prototype.js";
 import { Vector3 } from "three";
-import { DIRECTIONS } from "../WaveFunctionCollapse/Constants/Direction_constants.js";
+import { DIRECTIONS } from "../WaveFunctionCollapse/Constants/Direction.js";
 
 export default class World {
   constructor() {

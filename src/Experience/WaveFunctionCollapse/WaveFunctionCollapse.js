@@ -2,7 +2,7 @@ import Vector3 from "./Utils/Vector3.js";
 import { getPrototypeById } from "./Prototype.js";
 import Stack from "../Utils/Language/Stack.js";
 import { randomBetween } from "../Utils/SeededRandom.js";
-import { DIRECTIONS } from "./Constants/Direction_constants.js";
+import { DIRECTIONS } from "./Constants/Direction.js";
 import Map from "./Map.js";
 
 class WaveFunctionCollapse {
