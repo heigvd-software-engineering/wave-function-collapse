@@ -17,6 +17,7 @@ const TILE_TYPE = {
   WART1: "wall_angle_reverse_top_1",
   WAT1: "wall_angle_top_1",
   WT1: "wall_top_1",
+  INT1: "interior_1", // empty interior
 };
 
 export { TILE_ROTATION, TILE_TYPE };

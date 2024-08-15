@@ -48,6 +48,15 @@ export const SOCKET_TYPE = {
     xxxxxxx
    */
   H_5_S: "H_5_S",
+  /*
+   interior
+   xxxxxxx
+   x     x
+   x     x
+   x     x
+   xxxxxxx
+  */
+  H_6_S: "H_6_S",
 
   ////
   // VERTICALS
@@ -212,6 +221,15 @@ export const SOCKET_TYPE = {
    xxxxxxx
   */
   V_2_RG_3: "V_2_RG_3",
+  /*
+   interior
+   xxxxxxx
+   x     x
+   x     x
+   x     x
+   xxxxxxx
+  */
+  V_3_0: "V_3_0",
 
   //// VERTICALS BOTTOM
   /*
@@ -270,4 +288,13 @@ export const SOCKET_TYPE = {
    xxxxxxx
   */
   V_2_3_B: "V_2_3_B",
+  /*
+   interior
+   xxxxxxx
+   x     x
+   x     x
+   x     x
+   xxxxxxx
+  */
+  V_3_0_B: "V_3_0_B",
 };

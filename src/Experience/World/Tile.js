@@ -28,7 +28,10 @@ export default class Tile {
     }
 
     // Resource
-    if (this.prototype.name === Prototype.TILE_TYPE.BLANK) {
+    if (
+      this.prototype.name === Prototype.TILE_TYPE.BLANK ||
+      this.prototype.name === Prototype.TILE_TYPE.INT1
+    ) {
       this.resource = null;
       this.model = {
         position: position.clone(),

@@ -32,12 +32,15 @@ export default class World {
 
       // Debug for showing a single tile, change the [ ] number to get another rotation TODO
       // const prototype = Prototype.getPrototypesByType("blank")[0];
-      const prototype = Prototype.getPrototypesByType("ceiling_1")[0];
-      // const prototype = Prototype.getPrototypesByType("wall_1")[1];
+      // const prototype = Prototype.getPrototypesByType("ceiling_1")[0];
+      // const prototype = Prototype.getPrototypesByType("wall_1")[0];
       // const prototype = Prototype.getPrototypesByType("wall_top_1")[3];
-      // const prototype = Prototype.getPrototypesByType("wall_angle_1")[3];
-      // const prototype = Prototype.getPrototypesByType("wall_angle_reverse_top_1")[3];
+      // const prototype = Prototype.getPrototypesByType("wall_angle_1")[0];
+      const prototype = Prototype.getPrototypesByType(
+        "wall_angle_reverse_top_1",
+      )[0];
       // const prototype = Prototype.getPrototypesByType("wall_angle_top_1")[3];
+      // const prototype = Prototype.getPrototypesByType("interior_1")[0];
 
       this.tile = new Tile(
         prototype,
